@@ -1,54 +1,47 @@
 extern crate serde_derive;
 extern crate serde_json;
 
-use futures::lock::Mutex;
-use std::sync::Arc;
+pub mod config;
+pub mod routes;
+pub mod sentence;
+pub mod state;
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use futures::lock::Mutex;
+use sqlx::postgres::PgPoolOptions;
+use std::{sync::Arc, time::Duration};
+
+use actix_web::{web, App, HttpServer};
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
-pub mod sentence;
-
-use sentence::Sentence;
-
-#[get("/{id}")]
-async fn index(id: web::Path<i32>) -> impl Responder {
-  let id = id.into_inner();
-  format!("Hello {}!", id)
-}
-
-#[post("/text")]
-async fn text(payload: String, link_parser: web::Data<Arc<Mutex<LinkParser>>>) -> impl Responder {
-  let lp = link_parser
-    .lock()
-    .await;
-
-  let lp_sentence = lp
-    .parse_sentence(payload.clone())
-    .expect("Hope this works");
-
-  let sentence = Sentence::from_lp_sentence(lp_sentence.clone());
-
-  // let a = serde_json::to_value(sentence).expect("Hope this works 2");
-  let a = serde_json::to_value(lp_sentence).expect("Hope this works 2");
-
-  // let json = serde_json::to_string_pretty(&a).expect("JSON");
-
-  HttpResponse::Ok().json(a)
-  // HttpResponse::Ok().body(json)
-}
+use routes::{index, text};
+use state::State;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+  color_backtrace::install();
+  let config = config::server_config();
+
   let link_parser = Arc::new(Mutex::new(LinkParser::new(LinkParserOptions {})));
+
+  dbg!(&config);
+
+  let pool = PgPoolOptions::new()
+    .max_connections(config.database_connection_pool_size)
+    .connect_timeout(Duration::new(config.database_connection_timeout_sec, 0))
+    .connect(&config.database_url)
+    .await
+    .expect("Error connecting to database");
+
+  let state = State::new(pool.clone());
 
   HttpServer::new(move || {
     App::new()
       .app_data(web::Data::new(link_parser.clone()))
+      .app_data(web::Data::new(state.clone()))
       .service(index)
       .service(text)
   })
-  .bind("0.0.0.0:8089")?
+  .bind(format!("0.0.0.0:{}", config.tcp_port))?
   .run()
   .await
 }

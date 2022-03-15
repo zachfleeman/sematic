@@ -1,0 +1,57 @@
+{
+  "query": "\n      SELECT\n        id,\n        frame,\n        members,\n        created_at,\n        created_by,\n        updated_at,\n        updated_by\n      FROM\n        verb_frame\n      WHERE\n        members @> ARRAY[$1]\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "frame",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "members",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_by",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e1ea77a45ab065d73980c4cb24d531e2c376e13eaec450b8dde438e3d5f22893"
+}
