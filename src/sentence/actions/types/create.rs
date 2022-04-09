@@ -1,4 +1,4 @@
-use crate::sentence::actions::action_types::ActionTypes;
+use crate::sentence::actions::{action_types::ActionTypes};
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

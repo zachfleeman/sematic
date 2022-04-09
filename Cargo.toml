@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 actix-web = "4.0.0-rc.3"
+derive_more = "0.99.17"
 futures = "0.3.21"
 serde = {version = "1.0.136", features = ["derive"]}
 serde_derive = "1.0.136"
@@ -19,6 +20,9 @@ ron = "0.7.0"
 sqlx = {version = "0.5.11", features = ["postgres", "uuid", "json", "chrono", "runtime-actix-native-tls", "offline"]}
 sema-api-db = { path = "./lib/db" }
 uuid = {version = "0.8.2", features = ["serde", "v4"]}
+reqwest = {version = "0.11.10", features = ["json"]}
+strum = "0.24.0"
+strum_macros = "0.24"
 
 [build-dependencies]
 built = {version = "0.5.1", features = ["chrono", "git2"]}

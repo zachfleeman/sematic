@@ -1,79 +1,79 @@
-// use anyhow::Result;
-// use link_parser_rust_bindings::lp::{disjunct::LinkTypes, sentence::LPSentence, word::LPWord};
-// use serde_derive::{Deserialize, Serialize};
+use anyhow::Result;
+use link_parser_rust_bindings::lp::{disjunct::LinkTypes, sentence::LPSentence, word::LPWord};
+use serde_derive::{Deserialize, Serialize};
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub enum SentenceTypes {
-//   Imperative,
-//   Interrogative,
-//   Exclamatory,
-//   Declarative,
-// }
+use super::{actions::{Actions}, Entity};
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub struct Sentence {
-//   sentence_type: SentenceTypes,
-// }
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SentenceTypes {
+  Imperative,
+  Interrogative,
+  Exclamatory,
+  Declarative,
+}
 
-// impl Sentence {
-//   pub fn from_lp_sentence(lp_sentence: LPSentence) -> Sentence {
-//     // let's try to handle a few verbs
-//     let verbs = lp_sentence.get_verbs();
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Sentence {
+  pub sentence_type: SentenceTypes,
 
-//     // super hack
-//     for verb in verbs.into_iter() {
-//       // dbg!(verb);
+  pub entities: Vec<Entity>,
 
-//       // if verb.word == "create" {
-//       //   println!("got a create");
-//         let stuff = handle_create_verb(lp_sentence.clone(), verb).expect("handle_create_verb: something went wrong");
-//       // }
-//     }
+  pub actions: Vec<Actions>,
+}
 
-//     Sentence {
-//       sentence_type: SentenceTypes::Imperative,
-//     }
-//   }
-// }
+impl Sentence {
+  pub fn new(sentence_type: SentenceTypes) -> Self {
+    Sentence {
+      sentence_type,
+      entities: Vec::new(),
+      actions: Vec::new(),
+    }
+  }
 
-// pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
-//   // The "create" action
+  // pub fn from_lp_sentence(lp_sentence: LPSentence) -> Sentence {
+  //   // let's try to handle a few verbs
+  //   let verbs = lp_sentence.get_verbs();
 
-//   // find out what we are creating
-//   let rest_of_sentence = lp_sentence.words[verb.position + 1..].to_vec();
+  //   // super hack
+  //   for verb in verbs.into_iter() {
+  //     // dbg!(verb);
 
-//   let a = rest_of_sentence
-//     .iter()
-//     .find(|w| {
-//       w.disjuncts.iter().any(|d| {
-//         match d.link_type {
-//           LinkTypes::O(_) => true,
-//           _ => false,
-//         }
-//       })
-//     });
+  //     // if verb.word == "create" {
+  //     //   println!("got a create");
+  //       let stuff = handle_create_verb(lp_sentence.clone(), verb).expect("handle_create_verb: something went wrong");
+  //     // }
+  //   }
 
-//   if let Some(left_pointing_o) = a {
-//     dbg!(&verb);
-//     dbg!(left_pointing_o);
+  //   Sentence {
+  //     sentence_type: SentenceTypes::Imperative,
+  //   }
+  // }
+}
 
-//     // What are the modifiers of left_pointing_o?
-//     println!("{} -> {}", verb.word, left_pointing_o.word);
-//   }
+pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
+  // The "create" action
 
-//   Ok(())
-// }
+  // find out what we are creating
+  let rest_of_sentence = lp_sentence.words[verb.position + 1..].to_vec();
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// #[serde(rename_all = "camelCase")]
-// pub enum ActionTypes {
-//   Create,
-// }
+  let a = rest_of_sentence
+    .iter()
+    .find(|w| {
+      w.disjuncts.iter().any(|d| {
+        match d.link_type {
+          LinkTypes::O(_) => true,
+          _ => false,
+        }
+      })
+    });
 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
-// pub struct CreateAction {
-//   action_type: ActionTypes, // should always be ActionTypes::Create
-//   handle: String,
-//   objects: Vec<String>,
-//   multiplier: i32, // would it be possible to have fractional multipliers?
-// }
+  if let Some(left_pointing_o) = a {
+    dbg!(&verb);
+    dbg!(left_pointing_o);
+
+    // What are the modifiers of left_pointing_o?
+    println!("{} -> {}", verb.word, left_pointing_o.word);
+  }
+
+  Ok(())
+}
