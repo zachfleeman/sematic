@@ -77,48 +77,48 @@ async fn get_verb_frames() -> Result<HashMap<String, Vec<String>>> {
   Ok(verb_frames)
 }
 
-pub async fn insert_verb_frames(verb_frames: HashMap<String, Vec<String>>) -> Result<()> {
-  let pool = PgPoolOptions::new()
-    .max_connections(5)
-    .connect_timeout(Duration::new(3, 0))
-    .connect(&"postgres://brochstilley:Hellothere12345!@localhost:5432/sema")
-    .await?;
-  let master_uuid = Uuid::parse_str("11111111-2222-3333-4444-555555555555").unwrap();
+// pub async fn insert_verb_frames(verb_frames: HashMap<String, Vec<String>>) -> Result<()> {
+//   let pool = PgPoolOptions::new()
+//     .max_connections(5)
+//     .connect_timeout(Duration::new(3, 0))
+//     .connect(&"postgres://brochstilley:Hellothere12345!@localhost:5432/sema")
+//     .await?;
+//   let master_uuid = Uuid::parse_str("11111111-2222-3333-4444-555555555555").unwrap();
 
-  for verb_frame in verb_frames.into_iter() {
-    let frame = verb_frame
-      .0
-      .split("-")
-      .nth(0)
-      .unwrap();
-    let members = verb_frame.1;
+//   for verb_frame in verb_frames.into_iter() {
+//     let frame = verb_frame
+//       .0
+//       .split("-")
+//       .nth(0)
+//       .unwrap();
+//     let members = verb_frame.1;
 
-    sqlx::query!(
-      r#"
-        INSERT INTO verb_frame (frame, members, created_by, updated_by)
-        VALUES ($1, $2, $3, $4)
-        RETURNING *
-      "#,
-      frame,
-      &members,
-      master_uuid,
-      master_uuid,
-    )
-    .fetch_one(&pool)
-    .await
-    .map_err(anyhow::Error::from)?;
-  }
+//     sqlx::query!(
+//       r#"
+//         INSERT INTO verb_frame (frame, members, created_by, updated_by)
+//         VALUES ($1, $2, $3, $4)
+//         RETURNING *
+//       "#,
+//       frame,
+//       &members,
+//       master_uuid,
+//       master_uuid,
+//     )
+//     .fetch_one(&pool)
+//     .await
+//     .map_err(anyhow::Error::from)?;
+//   }
 
-  Ok(())
-}
+//   Ok(())
+// }
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
   println!("{}", "running verbframe migration");
 
-  let verb_frames = get_verb_frames().await?;
+  // let verb_frames = get_verb_frames().await?;
 
-  insert_verb_frames(verb_frames).await?;
+  // insert_verb_frames(verb_frames).await?;
 
   Ok(())
 }
