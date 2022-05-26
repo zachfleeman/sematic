@@ -128,6 +128,8 @@ pub fn tokens_to_ir(input: TokenIRState) -> Result<TokenIRState> {
     TreebankPOS::WP => (),
     TreebankPOS::WP2 => (),
     TreebankPOS::WRB => (),
+    TreebankPOS::EMPTY => (),
+    TreebankPOS::UNKNOWN => (),
   }
   // dbg!(&output.ir);
 

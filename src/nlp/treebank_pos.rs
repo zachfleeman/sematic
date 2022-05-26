@@ -50,6 +50,9 @@ pub enum TreebankPOS {
   #[strum(serialize = "WP$")]
   WP2,    // Possessive wh-pronoun: whose (no other words)
   WRB,    // wh-adverb: however, how, wherever, where, when, why
+  #[strum(serialize = "")]
+  EMPTY,  // Empty tag
+  UNKNOWN,// Unknown POS tag
 }
 
 /*
