@@ -55,7 +55,6 @@ async fn get_verb_frames() -> Result<HashMap<String, Vec<String>>> {
   let mut verb_frames = HashMap::new();
 
   while let Some(result) = cursor.next().await {
-    // dbg!(result?);
     let resp: MongoVerbFrame = bson::from_document(result?)?;
 
     let members = resp

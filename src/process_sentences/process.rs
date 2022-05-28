@@ -9,6 +9,8 @@ use crate::sema::symbol::Symbol;
 
 use crate::wordnet::wordnet_verbs::{WordnetVerbs};
 
+use link_parser_rust_bindings::{LinkParserOptions, LinkParser};
+
 pub async fn process_parts(parts: Vec<SentenceParts>) -> Result<Vec<SemaSentence>> {
   let mut sema_sentences = Vec::new();
 
@@ -27,7 +29,14 @@ pub async fn process_part(part: SentenceParts) -> Result<SemaSentence> {
   //   println!("got a two chunker!");
   //   sema_sentence = create_two_chunk_sema_sentence(&part)?;
   // }
+
+  // let lp_opt = LinkParserOptions { };
+  // let lp = LinkParser::new(lp_opt);
+
+  // let t = lp.parse_sentence(&part.original_sentence)?;
+
   let r = parse_sentence_part(part).await?;
+
 
   // Ok(sema_sentence)
   Ok(r)
@@ -79,7 +88,6 @@ pub fn create_two_chunk_sema_sentence(part: &SentenceParts) -> Result<SemaSenten
 pub fn chunk_to_entity(part: &SentenceParts, chunk_index: usize, symbol: &mut Symbol) -> Result<Entity> {
   // let chunk_tokens 
   let tokens = part.get_chunk_tokens(chunk_index);
-  dbg!(&tokens);
 
   Ok(Entity::new("something".to_string(), symbol))
 }

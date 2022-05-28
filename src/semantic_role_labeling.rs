@@ -16,7 +16,7 @@ pub async fn play_with_srl(payload: &str) -> Result<()> {
     .iter()
     .map(|f| f.frame_text())
     .collect::<Vec<_>>();
-  dbg!(&frame_texts);
+  // dbg!(&frame_texts);
 
   for frames in srl_frames.into_iter() {
     // println!("verb: {}", frames.verb);
@@ -56,8 +56,8 @@ pub async fn play_with_srl(payload: &str) -> Result<()> {
             .filter(|t| !t.is_empty())
             .collect::<Vec<_>>();
 
-          dbg!(&text);
-          dbg!(text_frags);
+          // dbg!(&text);
+          // dbg!(text_frags);
         }
         _ => {}
         // SRLArgs::ARG2 => todo!(),
@@ -71,7 +71,7 @@ pub async fn play_with_srl(payload: &str) -> Result<()> {
     }
   }
 
-  dbg!(&agents);
+  // dbg!(&agents);
 
   Ok(())
 }

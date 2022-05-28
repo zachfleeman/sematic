@@ -1479,8 +1479,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bindgen",
- "nlprule",
- "nlprule-build",
  "regex",
  "serde",
  "serde_derive",

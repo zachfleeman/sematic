@@ -3,6 +3,8 @@ use convert_case::{Case, Casing};
 use std::string::ToString;
 use strum_macros::Display;
 
+use super::symbol::Symbol;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "agent_type")]
@@ -67,6 +69,15 @@ impl AgentProperties {
 pub struct Person {
   pub symbol: String,
   pub properties: Vec<PersonProperties>,
+}
+
+impl Person {
+  pub fn new(symbol: &mut Symbol) -> Self {
+    Self {
+      symbol: symbol.next_symbol(),
+      properties: vec![],
+    }
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

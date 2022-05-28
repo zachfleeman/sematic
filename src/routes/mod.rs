@@ -82,7 +82,7 @@ async fn text(
   //   .await?;
 
   let lp_sentence = lp
-    .parse_sentence(payload.clone())
+    .parse_sentence(&payload)
     .expect("Hope this works");
 
   // Need to determine all the actions (verbs) in the sentence.
@@ -151,11 +151,25 @@ pub struct TextToJSONRequestObject {
 #[post("/text-to-json")]
 async fn text_to_json(
   payload: web::Json<TextToJSONRequestObject>,
+  link_parser: web::Data<Arc<Mutex<LinkParser>>>,
 ) -> Result<impl Responder, Error> {
+  let lp = link_parser
+  .lock()
+  .await;
+
+  // let links = lp
+  //   .parse_sentence(&payload.sentences)
+  //   .expect("Hope this works");
+
   let parts = payload
     .sentences
     .iter()
-    .filter_map(|sentence| SentenceParts::from_text(sentence.clone()).ok())
+    .filter_map(|sentence| {
+      let links = lp
+        .parse_sentence(&sentence)
+        .expect("Hope this works");
+      SentenceParts::from_text(sentence.clone(), links).ok()
+    })
     .collect::<Vec<SentenceParts>>();
 
   let sema_sentences = process_parts(parts.clone())

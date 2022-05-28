@@ -29,25 +29,6 @@ impl Sentence {
       actions: Vec::new(),
     }
   }
-
-  // pub fn from_lp_sentence(lp_sentence: LPSentence) -> Sentence {
-  //   // let's try to handle a few verbs
-  //   let verbs = lp_sentence.get_verbs();
-
-  //   // super hack
-  //   for verb in verbs.into_iter() {
-  //     // dbg!(verb);
-
-  //     // if verb.word == "create" {
-  //     //   println!("got a create");
-  //       let stuff = handle_create_verb(lp_sentence.clone(), verb).expect("handle_create_verb: something went wrong");
-  //     // }
-  //   }
-
-  //   Sentence {
-  //     sentence_type: SentenceTypes::Imperative,
-  //   }
-  // }
 }
 
 pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
@@ -68,9 +49,6 @@ pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
     });
 
   if let Some(left_pointing_o) = a {
-    dbg!(&verb);
-    dbg!(left_pointing_o);
-
     // What are the modifiers of left_pointing_o?
     println!("{} -> {}", verb.word, left_pointing_o.word);
   }

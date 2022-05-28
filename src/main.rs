@@ -1,19 +1,19 @@
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate derive_more;
+extern crate serde_json;
 
 pub mod config;
-pub mod routes;
-pub mod sentence;
-pub mod state;
-pub mod services;
-pub mod semantic_role_labeling;
 pub mod nlp;
-pub mod sema;
-pub mod wordnet;
-pub mod process_sentences;
 pub mod parse;
+pub mod process_sentences;
+pub mod routes;
+pub mod sema;
+pub mod semantic_role_labeling;
+pub mod sentence;
+pub mod services;
+pub mod state;
+pub mod wordnet;
 
 use futures::lock::Mutex;
 use sqlx::postgres::PgPoolOptions;
@@ -22,20 +22,24 @@ use std::{sync::Arc, time::Duration};
 use actix_web::{web, App, HttpServer};
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
-use routes::{index, text, srl, text2, text_to_json};
+use routes::{index, srl, text, text2, text_to_json};
 use state::State;
 
+use crate::nlp::human_names::HumanNames;
 use crate::nlp::nlp_rule::NLPRule;
-use crate::wordnet::wordnet_verbs::WordnetVerbs;
 use crate::wordnet::wordnet_nouns::WordnetNouns;
-
+use crate::wordnet::wordnet_verbs::WordnetVerbs;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
   color_backtrace::install();
   let config = config::server_config();
 
-  let link_parser = Arc::new(Mutex::new(LinkParser::new(LinkParserOptions {})));
+  let link_parser_ops = LinkParserOptions {
+    verbosity: 0,
+    ..LinkParserOptions::default()
+  };
+  let link_parser = Arc::new(Mutex::new(LinkParser::new(link_parser_ops)));
 
   // Init NLP Rule
   NLPRule::init();
@@ -43,6 +47,9 @@ async fn main() -> std::io::Result<()> {
   // Init Wordnet collections
   WordnetVerbs::init();
   WordnetNouns::init();
+
+  // Init Human Names
+  HumanNames::init();
 
   dbg!(&config);
 
