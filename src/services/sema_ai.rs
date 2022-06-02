@@ -27,5 +27,7 @@ pub async fn get_ml_generated_sentence(raw_sentences: Vec<String>) -> Result<Sem
 
   let sema_resp = resp.json::<SemaAIResponse>().await?;
 
+  dbg!(&sema_resp);
+
   Ok(sema_resp)
 }

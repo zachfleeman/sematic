@@ -1,10 +1,10 @@
 use super::chunk::Chunk;
 use super::nlp_rule::NLPRule;
 use anyhow::Result;
-use link_parser_rust_bindings::{lp::sentence::LPSentence, LinkParserOptions, LinkParser};
+use link_parser_rust_bindings::lp::sentence::LPSentence;
 use nlprule::types::owned::Token;
 
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SentenceParts {

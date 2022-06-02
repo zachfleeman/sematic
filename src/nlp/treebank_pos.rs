@@ -52,6 +52,18 @@ pub enum TreebankPOS {
   WRB,    // wh-adverb: however, how, wherever, where, when, why
   #[strum(serialize = "")]
   EMPTY,  // Empty tag
+  #[strum(serialize = ",")]
+  COMMA,
+  #[strum(serialize = ":")]
+  SemiColon,
+  #[strum(serialize = ".")]
+  PERIOD,
+  #[strum(serialize = "$")]
+  DollarSign,
+  #[strum(serialize = "#")]
+  PoundSign,
+  #[strum(serialize = "?")]
+  QuestionMark,
   UNKNOWN,// Unknown POS tag
 }
 

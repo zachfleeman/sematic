@@ -36,4 +36,13 @@ impl SemaSentence {
       queries: Vec::new(),
     }
   }
+
+  pub fn has_ego_agent(&self) -> bool {
+    for agent in &self.agents {
+      if agent.is_ego() {
+        return true;
+      }
+    }
+    false
+  }
 }

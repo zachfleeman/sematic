@@ -1,7 +1,7 @@
 use crate::nlp::{
   human_names::HumanNames, sentence_parts::SentenceParts, treebank_pos::TreebankPOS,
 };
-use crate::parse::ir::*;
+use super::ir::*;
 use crate::wordnet::wordnet_verbs::WordnetVerbs;
 use anyhow::{anyhow, Result};
 use nlprule::types::owned::Token;
@@ -64,13 +64,14 @@ pub fn tokens_to_ir(input: TokenIRState) -> Result<TokenIRState> {
         plurality: Plurality::Plural,
       }));
     }
-    TreebankPOS::NNU => { // Nouns that are uncountable, like "everything", "admiration"
+    TreebankPOS::NNU => {
+      // Nouns that are uncountable, like "everything", "admiration"
       output.push_parsed_token(IR::Entity(IREntity {
         token_index: output.current_index,
         text: get_token_text(&token),
-        plurality: Plurality::Unknown
+        plurality: Plurality::Unknown,
       }));
-    },
+    }
     TreebankPOS::NNUN => {
       // case: "watch a movie"
       // NNUN should be an action if:
@@ -135,6 +136,12 @@ pub fn tokens_to_ir(input: TokenIRState) -> Result<TokenIRState> {
     TreebankPOS::WRB => (),
     TreebankPOS::EMPTY => (),
     TreebankPOS::UNKNOWN => (),
+    TreebankPOS::COMMA => (),
+    TreebankPOS::SemiColon => (),
+    TreebankPOS::PERIOD => (),
+    TreebankPOS::DollarSign => (),
+    TreebankPOS::PoundSign => (),
+    TreebankPOS::QuestionMark => (),
   }
 
   Ok(output)

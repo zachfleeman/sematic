@@ -25,6 +25,13 @@ impl Agents {
       Self::Company(c) => c.symbol.to_owned(),
     }
   }
+
+  pub fn is_ego(&self) -> bool {
+    match self {
+      Self::Ego(_) => true,
+      _ => false,
+    }
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,9 +42,9 @@ pub struct Ego {
 }
 
 impl Ego {
-  pub fn new(symbol: String) -> Self {
+  pub fn new(symbol: &mut Symbol) -> Self {
     Self {
-      symbol,
+      symbol: symbol.next_symbol(),
       properties: vec![],
     }
   }

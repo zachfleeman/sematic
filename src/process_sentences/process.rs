@@ -1,15 +1,10 @@
 use anyhow::Result;
 
 use crate::nlp::sentence_parts::SentenceParts;
-use crate::parse::parse_sentence_part;
+use crate::parse::link_parse::parse_with_links;
+use crate::parse::token_parse::parse_with_tokens;
 use crate::sema::sema_sentence::SemaSentence;
-use crate::sema::action::Action;
-use crate::sema::entity::Entity;
-use crate::sema::symbol::Symbol;
-
-use crate::wordnet::wordnet_verbs::{WordnetVerbs};
-
-use link_parser_rust_bindings::{LinkParserOptions, LinkParser};
+use crate::services::sema_ai::get_ml_generated_sentence;
 
 pub async fn process_parts(parts: Vec<SentenceParts>) -> Result<Vec<SemaSentence>> {
   let mut sema_sentences = Vec::new();
@@ -23,71 +18,28 @@ pub async fn process_parts(parts: Vec<SentenceParts>) -> Result<Vec<SemaSentence
 }
 
 pub async fn process_part(part: SentenceParts) -> Result<SemaSentence> {
-  let mut sema_sentence = SemaSentence::new();
+  // First attempt is to use the token parser.
+  if let Some(s) = parse_with_tokens(part.clone())? {
+    return Ok(s);
+  }
 
-  // if part.chunks.len() == 2 && is_two_chunk_sentence(&part) {
-  //   println!("got a two chunker!");
-  //   sema_sentence = create_two_chunk_sema_sentence(&part)?;
-  // }
+  // Second attempt is to use the link parser.
+  if let Some(s) = parse_with_links(part.clone())? {
+    return Ok(s);
+  }
 
-  // let lp_opt = LinkParserOptions { };
-  // let lp = LinkParser::new(lp_opt);
-
-  // let t = lp.parse_sentence(&part.original_sentence)?;
-
-  let r = parse_sentence_part(part).await?;
-
+  // ultimate fallback is ML
+  let ml_gen_sentences = get_ml_generated_sentence(vec![part
+    .original_sentence
+    .clone()])
+  .await?;
+  // assuming only one sentence is returned via this manner.
+  let b = ml_gen_sentences
+    .into_iter()
+    .next()
+    .ok_or("no sentence returned")
+    .map_err(|e| anyhow::anyhow!(e))?;
 
   // Ok(sema_sentence)
-  Ok(r)
-}
-
-// pub async fn process_single_verbs
-
-pub fn is_two_chunk_sentence(part: &SentenceParts) -> bool {
-  if part.chunks.len() > 2 {
-    return false;
-  };
-
-  if part.chunks[0].pos != "VP" {
-    return false;
-  };
-
-  let verb = part.chunks[0].phrase.clone();
-
-  if !WordnetVerbs::contains(&verb) {
-    return false;
-  };
-
-  return true;
-}
-
-pub fn create_two_chunk_sema_sentence(part: &SentenceParts) -> Result<SemaSentence> {
-  let mut sema_sentence = SemaSentence::new();
-  let mut symbol = Symbol::new(0);
-
-  let verb = part.chunks[0].phrase.clone();
-
-  let action = Action {
-    action_type: verb,
-    symbol: symbol.next_symbol(),
-    properties: vec![],
-  };
-
-  sema_sentence.actions.push(action);
-
-  let mut entity = chunk_to_entity(part, 1, &mut symbol)?;
-
-  // entity.symbol = symbol.next_symbol();
-
-  sema_sentence.entities.push(entity);
-
-  Ok(sema_sentence)
-}
-
-pub fn chunk_to_entity(part: &SentenceParts, chunk_index: usize, symbol: &mut Symbol) -> Result<Entity> {
-  // let chunk_tokens 
-  let tokens = part.get_chunk_tokens(chunk_index);
-
-  Ok(Entity::new("something".to_string(), symbol))
+  Ok(b.1.json)
 }

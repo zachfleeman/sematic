@@ -9,11 +9,11 @@ pub mod parse;
 pub mod process_sentences;
 pub mod routes;
 pub mod sema;
-pub mod semantic_role_labeling;
 pub mod sentence;
 pub mod services;
 pub mod state;
 pub mod wordnet;
+pub mod verify;
 
 use futures::lock::Mutex;
 use sqlx::postgres::PgPoolOptions;
@@ -22,7 +22,7 @@ use std::{sync::Arc, time::Duration};
 use actix_web::{web, App, HttpServer};
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
-use routes::{index, srl, text, text2, text_to_json};
+use routes::{health, srl, text_to_json};
 use state::State;
 
 use crate::nlp::human_names::HumanNames;
@@ -66,10 +66,8 @@ async fn main() -> std::io::Result<()> {
     App::new()
       .app_data(web::Data::new(link_parser.clone()))
       .app_data(web::Data::new(state.clone()))
-      .service(index)
-      .service(text)
+      .service(health)
       .service(srl)
-      .service(text2)
       .service(text_to_json)
   })
   .bind(format!("0.0.0.0:{}", config.tcp_port))?
