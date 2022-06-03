@@ -1,10 +1,10 @@
 use anyhow::Result;
 use futures::stream::StreamExt;
 use serde_derive::{Deserialize, Serialize};
-use sqlx::postgres::PgPoolOptions;
+// use sqlx::postgres::PgPoolOptions;
 use std::collections::HashMap;
-use std::{time::Duration};
-use uuid::Uuid;
+// use std::{time::Duration};
+// use uuid::Uuid;
 
 use mongodb::{
   bson::{self, doc, Document},
@@ -21,7 +21,7 @@ pub struct MongoVerbFrame {
   subclasses_members: Option<Vec<String>>,
 }
 
-async fn get_verb_frames() -> Result<HashMap<String, Vec<String>>> {
+async fn _get_verb_frames() -> Result<HashMap<String, Vec<String>>> {
   let client_options = ClientOptions::parse("mongodb://root:pass12345@localhost:27017").await?;
   let mdb_client = Client::with_options(client_options)?; 
   let db = mdb_client.database("verbnet");

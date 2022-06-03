@@ -1,13 +1,16 @@
 use anyhow::Result;
 
 use crate::{
+  nlp::human_names::HumanNames,
   nlp::sentence_parts::SentenceParts,
   sema::{
-    agents::{Agents, Ego},
+    agents::{Agents, Ego, Person, PersonProperties},
     sema_sentence::SemaSentence,
     symbol::Symbol,
   },
 };
+
+use link_parser_rust_bindings::{lp::word::Word as LPWord, pos::POS};
 
 use super::link_parse::ParseState;
 
@@ -17,6 +20,7 @@ pub fn parse_agents(
   symbol: &mut Symbol,
   parse_state: &mut ParseState,
 ) -> Result<()> {
+  println!("Parse Agents");
   // "I" and "My" detection
   let ego_words = part
     .links
@@ -49,6 +53,89 @@ pub fn parse_agents(
     sema_sentence
       .agents
       .push(agent);
+  }
+
+  // human names
+  let mut all_names: Vec<Vec<LPWord>> = vec![];
+  let mut current_name = vec![];
+
+  for word in part
+    .links
+    .words
+    .iter()
+  {
+    let cleaned_word = word.get_cleaned_word();
+
+    if let Some(pos) = word.pos {
+      dbg!(&pos);
+      if matches!(
+        pos,
+        POS::GivenName | POS::GivenNameMasculine | POS::GivenNameFeminine
+      ) {
+        println!("Name! {}", word.word);
+        current_name.push(word.clone());
+
+        continue;
+      }
+    }
+
+    if word.word_is_capitalized() {
+      if word.morpho_guessed && HumanNames::contains(&cleaned_word) {
+        current_name.push(word.clone());
+      }
+
+      continue;
+    } else {
+      if current_name.len() > 0 {
+        all_names.push(current_name);
+        current_name = vec![];
+      }
+    }
+  }
+
+  for name_vec in all_names.into_iter() {
+    let name_props = match name_vec.len() {
+      1 => {
+        let name = name_vec[0]
+          .get_cleaned_word()
+          .to_lowercase();
+        vec![PersonProperties::Name { name }]
+      }
+      2 => {
+        let first_name = name_vec[0]
+          .get_cleaned_word()
+          .to_lowercase();
+        let last_name = name_vec[1]
+          .get_cleaned_word()
+          .to_lowercase();
+        vec![
+          PersonProperties::FirstName { first_name },
+          PersonProperties::LastName { last_name },
+        ]
+      }
+      _ => {
+        let combined_name = name_vec
+          .iter()
+          .map(|w| {
+            w.get_cleaned_word()
+              .to_lowercase()
+          })
+          .collect::<Vec<String>>()
+          .join("_");
+
+        vec![PersonProperties::Name { name: combined_name }]
+      }
+    };
+
+    let mut person = Person::new(symbol);
+
+    person
+      .properties
+      .extend(name_props);
+
+    sema_sentence
+      .agents
+      .push(Agents::Person(person))
   }
 
   Ok(())

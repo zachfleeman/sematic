@@ -1,7 +1,7 @@
 use super::chunk::Chunk;
 use super::nlp_rule::NLPRule;
 use anyhow::Result;
-use link_parser_rust_bindings::lp::sentence::LPSentence;
+use link_parser_rust_bindings::lp::sentence::Sentence as LPSentence;
 use nlprule::types::owned::Token;
 
 use std::time::Instant;

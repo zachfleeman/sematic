@@ -55,6 +55,7 @@ async fn srl(payload: String) -> Result<impl Responder, Error> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextToJSONRequestObject {
   pub sentences: Vec<String>,
+  pub parts: Option<bool>
 }
 
 #[post("/text-to-json")]
@@ -81,8 +82,16 @@ async fn text_to_json(
     .await
     .map_err(SemaAPiError::from)?;
 
-  Ok(HttpResponse::Ok().json(json!({
-    "sema_sentences": sema_sentences,
-    "parts": parts
-  })))
+  let resp = if payload.parts.unwrap_or(false) {
+    json!({
+      "sema_sentences": sema_sentences,
+      "parts": parts
+    })
+  } else {
+    json!({
+      "sema_sentences": sema_sentences,
+    })
+  };
+
+  Ok(HttpResponse::Ok().json(resp))
 }

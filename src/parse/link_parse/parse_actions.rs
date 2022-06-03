@@ -9,10 +9,13 @@ use crate::{
   },
 };
 
+use super::link_parse::ParseState;
+
 pub fn parse_actions(
   sema_sentence: &SemaSentence,
   part: &SentenceParts,
   symbol: &mut Symbol,
+  parse_state: &mut ParseState,
 ) -> Result<SemaSentence> {
   let mut repaired_sentence = sema_sentence.clone();
 
@@ -20,10 +23,13 @@ pub fn parse_actions(
     .links
     .get_verbs();
 
-  let actions = verbs
-    .into_iter()
-    .map(|verb| Action::new(verb.word.clone(), symbol))
-    .collect::<Vec<Action>>();
+  let mut actions = vec![];
+
+  for v in verbs.into_iter() {
+    let action = Action::new(v.word.clone(), symbol);
+    parse_state.add_symbol(&action.symbol, vec![v.position]);
+    actions.push(action);  
+  }
 
   repaired_sentence
     .actions

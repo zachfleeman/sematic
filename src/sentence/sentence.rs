@@ -1,8 +1,12 @@
 use anyhow::Result;
-use link_parser_rust_bindings::lp::{disjunct::LinkTypes, sentence::LPSentence, word::LPWord};
+use link_parser_rust_bindings::lp::{
+  link_types::LinkTypes, 
+  sentence::Sentence as LPSentence, 
+  word::Word
+};
 use serde_derive::{Deserialize, Serialize};
 
-use super::{actions::{Actions}, Entity};
+use super::{actions::Actions, Entity};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SentenceTypes {
@@ -31,7 +35,7 @@ impl Sentence {
   }
 }
 
-pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
+pub fn handle_create_verb(lp_sentence: LPSentence, verb: Word) -> Result<()> {
   // The "create" action
 
   // find out what we are creating
@@ -40,12 +44,12 @@ pub fn handle_create_verb(lp_sentence: LPSentence, verb: LPWord) -> Result<()> {
   let a = rest_of_sentence
     .iter()
     .find(|w| {
-      w.disjuncts.iter().any(|d| {
-        match d.link_type {
-          LinkTypes::O(_) => true,
+      w.disjuncts
+        .iter()
+        .any(|d| match d.link_type {
+          LinkTypes::O => true,
           _ => false,
-        }
-      })
+        })
     });
 
   if let Some(left_pointing_o) = a {
