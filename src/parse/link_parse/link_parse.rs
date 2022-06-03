@@ -66,8 +66,6 @@ pub fn parse_with_links(part: SentenceParts) -> Result<Option<SemaSentence>> {
   // // Connect up all the objects created earlier
   let sema_sentence = connect_actions(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
-  dbg!(&parse_state);
-
   Ok(Some(sema_sentence))
 }
 
@@ -95,9 +93,7 @@ pub fn connect_actions(
           .links
           .get_word_by_position(*p)
       })
-      .collect::<Vec<Word>>();
-
-    dbg!(&action_words);
+      .collect::<Vec<&Word>>();
 
     for aw in action_words.iter() {
       // determine Agent / Arg 0 links

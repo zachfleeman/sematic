@@ -67,7 +67,6 @@ pub fn parse_agents(
     let cleaned_word = word.get_cleaned_word();
 
     if let Some(pos) = word.pos {
-      dbg!(&pos);
       if matches!(
         pos,
         POS::GivenName | POS::GivenNameMasculine | POS::GivenNameFeminine

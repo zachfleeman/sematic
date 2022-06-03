@@ -1,7 +1,6 @@
 use super::ir::*;
 use super::token_ir_state::TokenIRState;
 
-
 use anyhow::Result;
 
 use crate::nlp::sentence_parts::SentenceParts;

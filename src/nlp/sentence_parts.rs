@@ -22,7 +22,7 @@ pub struct SentenceParts {
 }
 
 impl SentenceParts {
-  pub fn from_text(original_sentence: String, links: LPSentence) -> Result<SentenceParts> {
+  pub fn from_text(original_sentence: &str) -> Result<SentenceParts> {
     let start = Instant::now();
     // let corrected_sentence = NLPRule::correct(original_sentence.clone())?;
     let corrected_sentence = original_sentence.clone();
@@ -136,13 +136,14 @@ impl SentenceParts {
     }
 
     Ok(SentenceParts {
-      original_sentence,
-      corrected_sentence,
+      original_sentence: original_sentence.to_string(),
+      corrected_sentence: corrected_sentence.to_string(),
       lemmatized_sentence,
       tokens,
-      links,
+      links: LPSentence { ..Default::default() },
       chunks,
     })
+
   }
 
   pub fn get_chunk_tokens(&self, chunk_index: usize) -> Vec<Token> {

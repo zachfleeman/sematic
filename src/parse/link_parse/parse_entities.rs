@@ -1,7 +1,8 @@
 use anyhow::Result;
-use link_parser_rust_bindings::lp::{
-  disjunct::ConnectorPointing,
-  link_types::LinkTypes,
+
+use link_parser_rust_bindings::{
+  lp::{disjunct::ConnectorPointing, link_types::LinkTypes, word::Word},
+  pos::POS,
 };
 
 use crate::{
@@ -27,6 +28,7 @@ pub fn parse_entities(
     .entities
     .clear();
 
+  // Assuming single word nouns for now.
   let known_nouns = part
     .links
     .get_known_nouns();
@@ -34,46 +36,48 @@ pub fn parse_entities(
   for noun in known_nouns.iter() {
     let mut entity = Entity::new(noun.word.clone(), symbol);
 
-    // let connected_words = part
-    //   .links
-    //   .get_connected_words(noun)?;
-    // dbg!(&connected_words);
+    let mut noun_mods: Vec<EntityProperties> = vec![];
 
-    // for cw in connected_words.iter() {
-    //   // TODO: Need to check if the noun is in the wordnet as multiple words.
-    //   // Maybe some of this work should happen when getting the nouns?
-    //   // For now just assuming all nouns are single words.
-    //   if noun.has_disjunct(LinkTypes::A, ConnectorPointing::Left)
-    //     && cw.has_disjunct(LinkTypes::A, ConnectorPointing::Right)
+    if let Some(prev_word) = part
+      .links
+      .get_prev_word(noun)
+    {
+      get_noun_modifiers(&mut noun_mods, vec![noun], prev_word, part);
+    }
+
+    entity
+      .properties
+      .extend(noun_mods);
+
+    // if noun.has_disjunct(LinkTypes::A, ConnectorPointing::Left) {
+    //   let mut entity_properties = vec![];
+    //   for w in part.links.words[..noun.position]
+    //     .iter()
+    //     .rev()
     //   {
-    //     let mod_type = cw.word.clone();
-    //     let mut amps = vec![];
+    //     // Stop if there are more (@)A- links
+    //     if w.has_disjunct(LinkTypes::A, ConnectorPointing::Left) {
+    //       break;
+    //     }
 
-    //     if cw.has_disjunct(LinkTypes::EA, ConnectorPointing::Left) {
-    //       let amp_words = part
-    //         .links
-    //         .get_connected_words(cw)?;
-    //       dbg!(&amp_words);
-
-    //       for amp_word in amp_words.iter() {
-    //         if amp_word.has_disjunct(LinkTypes::EA, ConnectorPointing::Right) {
-    //           amps.push(
-    //             amp_word
-    //               .word
-    //               .clone(),
-    //           );
-    //         }
-    //       }
-    //     };
-
-    //     entity
-    //       .properties
-    //       .push(EntityProperties::Modifier {
-    //         modifier_type: mod_type,
+    //     if w.has_raw_disjunct("dAJra-") && w.has_pos(POS::Adjective) {
+    //       entity_properties.push(EntityProperties::Modifier {
+    //         modifier_type: w.get_cleaned_word(),
     //         modifier: None,
-    //         amplifiers: amps,
+    //         amplifiers: vec![],
     //       });
+    //     }
+
+    //     if w.has_disjunct(LinkTypes::A, ConnectorPointing::Right) {
+    //       entity_properties.push(EntityProperties::Modifier {
+    //         modifier_type: w.get_cleaned_word(),
+    //         modifier: None,
+    //         amplifiers: vec![],
+    //       });
+    //     }
     //   }
+
+    //   entity.properties = entity_properties;
     // }
 
     parse_state.add_symbol(&entity.symbol, vec![noun.position]);
@@ -84,4 +88,47 @@ pub fn parse_entities(
   }
 
   Ok(repaired_sentence)
+}
+
+pub fn get_noun_modifiers(
+  entity_mods: &mut Vec<EntityProperties>,
+  noun: Vec<&Word>,
+  word: &Word,
+  part: &SentenceParts,
+) {
+  // Stop at other A- links
+  // TODO: There probably is better keys to trigger ending the recursion.
+  if word.has_disjunct(LinkTypes::A, ConnectorPointing::Left) {
+    return;
+  }
+
+  if word.has_pos(POS::Adjective) {
+    let mut amplifiers = vec![];
+
+    if let Some(prev_word) = part
+      .links
+      .get_prev_word(word)
+    {
+      if prev_word.has_disjunct(LinkTypes::EA, ConnectorPointing::Right) {
+        amplifiers.push(prev_word.get_cleaned_word());
+      }
+    }
+
+    let mut mod_prop = EntityProperties::Modifier {
+      modifier_type: word.get_cleaned_word(),
+      modifier: None,
+      amplifiers,
+    };
+
+    entity_mods.push(mod_prop);
+  }
+
+  if word.position > 0 {
+    if let Some(prev_word) = part
+      .links
+      .get_prev_word(word)
+    {
+      get_noun_modifiers(entity_mods, noun, prev_word, part);
+    }
+  }
 }

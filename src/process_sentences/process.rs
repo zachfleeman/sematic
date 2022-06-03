@@ -19,12 +19,15 @@ pub async fn process_parts(parts: Vec<SentenceParts>) -> Result<Vec<SemaSentence
 
 pub async fn process_part(part: SentenceParts) -> Result<SemaSentence> {
   // First attempt is to use the token parser.
-  if let Some(s) = parse_with_tokens(part.clone())? {
-    return Ok(s);
-  }
+  // if let Some(s) = parse_with_tokens(part.clone())? {
+  //   println!("parsed with tokens");
+  //   dbg!(&s);
+  //   return Ok(s);
+  // }
 
   // Second attempt is to use the link parser.
   if let Some(s) = parse_with_links(part.clone())? {
+    println!("parsed with links");
     return Ok(s);
   }
 

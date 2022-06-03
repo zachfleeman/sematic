@@ -1,7 +1,7 @@
 extern crate serde_derive;
 extern crate serde_json;
 
-use anyhow::Result;
+use anyhow::{self, Result};
 use derive_more::Display;
 use futures::lock::Mutex;
 use futures::TryFutureExt;
@@ -14,9 +14,9 @@ use crate::process_sentences::process::process_parts;
 use crate::services::allennlp_service::{get_semantic_role_labels, SRLResponse};
 
 use actix_web::{get, post, web, Error, HttpResponse, Responder};
-use link_parser_rust_bindings::{LinkParser};
+use link_parser_rust_bindings::{LinkParser, LinkParserError};
 
-use crate::nlp::{sentence_parts::SentenceParts,};
+use crate::nlp::sentence_parts::SentenceParts;
 
 // This custom error is needed to convert between anyhow::Error and actix_web::Error
 #[derive(Debug, Display)]
@@ -38,6 +38,12 @@ impl From<anyhow::Error> for SemaAPiError {
   }
 }
 
+impl From<LinkParserError> for SemaAPiError {
+  fn from(err: LinkParserError) -> Self {
+    SemaAPiError { err: err.into() }
+  }
+}
+
 #[get("/health")]
 async fn health() -> Result<impl Responder, Error> {
   Ok(HttpResponse::Ok())
@@ -55,7 +61,7 @@ async fn srl(payload: String) -> Result<impl Responder, Error> {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TextToJSONRequestObject {
   pub sentences: Vec<String>,
-  pub parts: Option<bool>
+  pub parts: Option<bool>,
 }
 
 #[post("/text-to-json")]
@@ -64,28 +70,38 @@ async fn text_to_json(
   link_parser: web::Data<Arc<Mutex<LinkParser>>>,
 ) -> Result<impl Responder, Error> {
   let lp = link_parser
-  .lock()
-  .await;
+    .lock()
+    .await;
 
-  let parts = payload
+  let mut all_parts = vec![];
+
+  for sentence in payload
     .sentences
     .iter()
-    .filter_map(|sentence| {
-      let links = lp
-        .parse_sentence(&sentence)
-        .expect("Hope this works");
-      SentenceParts::from_text(sentence.clone(), links).ok()
-    })
-    .collect::<Vec<SentenceParts>>();
+  {
+    let mut parts = SentenceParts::from_text(sentence).map_err(SemaAPiError::from)?;
 
-  let sema_sentences = process_parts(parts.clone())
+    if let Some(links) = lp
+      .parse_sentence(&sentence)
+      .map_err(SemaAPiError::from)?
+    {
+      parts.links = links;
+    }
+
+    all_parts.push(parts);
+  }
+
+  let sema_sentences = process_parts(all_parts.clone())
     .await
     .map_err(SemaAPiError::from)?;
 
-  let resp = if payload.parts.unwrap_or(false) {
+  let resp = if payload
+    .parts
+    .unwrap_or(false)
+  {
     json!({
       "sema_sentences": sema_sentences,
-      "parts": parts
+      "parts": &all_parts,
     })
   } else {
     json!({
