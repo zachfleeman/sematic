@@ -5,7 +5,10 @@ use link_parser_rust_bindings::lp::{
 use std::collections::HashMap;
 
 use super::{
-  parse_actions::parse_actions, parse_agents::parse_agents, parse_entities::parse_entities,
+  parse_actions::parse_actions,
+  parse_agents::parse_agents,
+  parse_entities::parse_entities,
+  parse_events::parse_events,
 };
 
 use crate::{
@@ -63,6 +66,8 @@ pub fn parse_with_links(part: SentenceParts) -> Result<Option<SemaSentence>> {
 
   let sema_sentence = parse_entities(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
+  let sema_sentence = parse_events(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
+
   // // Connect up all the objects created earlier
   let sema_sentence = connect_actions(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
@@ -95,7 +100,7 @@ pub fn connect_actions(
       })
       .collect::<Vec<&Word>>();
 
-    for aw in action_words.iter() {
+    for aw in action_words.into_iter() {
       // determine Agent / Arg 0 links
       // Are there any S links (noun to verb): https://www.abisource.com/projects/link-grammar/dict/section-S.html
       if aw.has_disjunct(LinkTypes::S, ConnectorPointing::Left) {

@@ -22,9 +22,9 @@ pub fn parse_entities(
   symbol: &mut Symbol,
   parse_state: &mut ParseState,
 ) -> Result<SemaSentence> {
-  let mut repaired_sentence = sema_sentence.clone();
+  let mut output_sentence = sema_sentence.clone();
 
-  repaired_sentence
+  output_sentence
     .entities
     .clear();
 
@@ -49,45 +49,14 @@ pub fn parse_entities(
       .properties
       .extend(noun_mods);
 
-    // if noun.has_disjunct(LinkTypes::A, ConnectorPointing::Left) {
-    //   let mut entity_properties = vec![];
-    //   for w in part.links.words[..noun.position]
-    //     .iter()
-    //     .rev()
-    //   {
-    //     // Stop if there are more (@)A- links
-    //     if w.has_disjunct(LinkTypes::A, ConnectorPointing::Left) {
-    //       break;
-    //     }
-
-    //     if w.has_raw_disjunct("dAJra-") && w.has_pos(POS::Adjective) {
-    //       entity_properties.push(EntityProperties::Modifier {
-    //         modifier_type: w.get_cleaned_word(),
-    //         modifier: None,
-    //         amplifiers: vec![],
-    //       });
-    //     }
-
-    //     if w.has_disjunct(LinkTypes::A, ConnectorPointing::Right) {
-    //       entity_properties.push(EntityProperties::Modifier {
-    //         modifier_type: w.get_cleaned_word(),
-    //         modifier: None,
-    //         amplifiers: vec![],
-    //       });
-    //     }
-    //   }
-
-    //   entity.properties = entity_properties;
-    // }
-
     parse_state.add_symbol(&entity.symbol, vec![noun.position]);
 
-    repaired_sentence
+    output_sentence
       .entities
       .push(entity);
   }
 
-  Ok(repaired_sentence)
+  Ok(output_sentence)
 }
 
 pub fn get_noun_modifiers(
@@ -114,7 +83,7 @@ pub fn get_noun_modifiers(
       }
     }
 
-    let mut mod_prop = EntityProperties::Modifier {
+    let mod_prop = EntityProperties::Modifier {
       modifier_type: word.get_cleaned_word(),
       modifier: None,
       amplifiers,
