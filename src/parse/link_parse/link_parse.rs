@@ -9,6 +9,7 @@ use super::{
   parse_agents::parse_agents,
   parse_entities::parse_entities,
   parse_events::parse_events,
+  parse_temporal::parse_temporal,
 };
 
 use crate::{
@@ -65,6 +66,8 @@ pub fn parse_with_links(part: SentenceParts) -> Result<Option<SemaSentence>> {
   let sema_sentence = parse_actions(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
   let sema_sentence = parse_entities(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
+
+  let sema_sentence = parse_temporal(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
   let sema_sentence = parse_events(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
