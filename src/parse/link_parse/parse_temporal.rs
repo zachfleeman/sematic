@@ -15,6 +15,25 @@ use crate::{
 
 use super::link_parse::ParseState;
 
+pub static LONG_MONTHS: [&str; 12] = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+pub static SHORT_MONTHS: [&str; 12] = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 /*
 Examples:
 October
@@ -132,7 +151,7 @@ impl TemporalIRState {
       }
     }
 
-    dbg!(&temporal_state);
+    // dbg!(&temporal_state);
 
 
 
@@ -154,6 +173,7 @@ pub fn parse_temporal(
 
   for group in temporal_ir_state.groups.iter() {
     match group[..] {
+      // October
       [TemporalIR::Month(ir_month)] => {
         let temporal = Temporals::Absolute( Absolute {
           symbol: symbol.get_symbol(),
@@ -183,25 +203,6 @@ pub fn parse_temporal(
 }
 
 // helpers
-
-pub static LONG_MONTHS: [&str; 12] = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-pub static SHORT_MONTHS: [&str; 12] = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
 
 pub fn is_month(word: &Word) -> bool {
   let word_text = word.get_cleaned_word();
