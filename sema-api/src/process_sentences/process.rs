@@ -27,7 +27,6 @@ pub async fn process_part(part: SentenceParts) -> Result<SemaSentence> {
 
   // Second attempt is to use the link parser.
   if let Some(s) = parse_with_links(part.clone())? {
-    println!("parsed with links");
     return Ok(s);
   }
 

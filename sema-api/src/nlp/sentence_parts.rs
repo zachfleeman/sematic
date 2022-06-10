@@ -22,10 +22,18 @@ pub struct SentenceParts {
 }
 
 impl SentenceParts {
-  pub fn from_text(original_sentence: &str) -> Result<SentenceParts> {
+  pub fn from_text(original_sentence: &str, repair: bool) -> Result<SentenceParts> {
     let start = Instant::now();
     // let corrected_sentence = NLPRule::correct(original_sentence.clone())?;
-    let corrected_sentence = original_sentence.clone();
+    let clone_original_sentence = original_sentence.clone().to_string();
+    println!("original: {}", &clone_original_sentence);
+    let corrected_sentence = if repair {
+      NLPRule::correct(clone_original_sentence)?
+    } else {
+      clone_original_sentence
+    };
+
+    println!("corrected: {}", corrected_sentence);
 
     let nlp_sentence = NLPRule::tokenize(&corrected_sentence)?;
     let duration = start.elapsed();
@@ -140,10 +148,11 @@ impl SentenceParts {
       corrected_sentence: corrected_sentence.to_string(),
       lemmatized_sentence,
       tokens,
-      links: LPSentence { ..Default::default() },
+      links: LPSentence {
+        ..Default::default()
+      },
       chunks,
     })
-
   }
 
   pub fn get_chunk_tokens(&self, chunk_index: usize) -> Vec<Token> {

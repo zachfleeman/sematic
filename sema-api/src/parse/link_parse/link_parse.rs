@@ -74,6 +74,8 @@ pub fn parse_with_links(part: SentenceParts) -> Result<Option<SemaSentence>> {
   // // Connect up all the objects created earlier
   let sema_sentence = connect_actions(&sema_sentence, &part, &mut symbol, &mut parse_state)?;
 
+  // dbg!(&sema_sentence);
+
   Ok(Some(sema_sentence))
 }
 

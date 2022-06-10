@@ -62,6 +62,7 @@ async fn srl(payload: String) -> Result<impl Responder, Error> {
 pub struct TextToJSONRequestObject {
   pub sentences: Vec<String>,
   pub parts: Option<bool>,
+  pub repair: Option<bool>,
 }
 
 #[post("/text-to-json")]
@@ -75,14 +76,16 @@ async fn text_to_json(
 
   let mut all_parts = vec![];
 
+  let repair = payload.repair.unwrap_or(false);
+
   for sentence in payload
     .sentences
     .iter()
   {
-    let mut parts = SentenceParts::from_text(sentence).map_err(SemaAPiError::from)?;
+    let mut parts = SentenceParts::from_text(sentence, repair).map_err(SemaAPiError::from)?;
 
     if let Some(links) = lp
-      .parse_sentence(&sentence)
+      .parse_sentence(&parts.corrected_sentence)
       .map_err(SemaAPiError::from)?
     {
       parts.links = links;

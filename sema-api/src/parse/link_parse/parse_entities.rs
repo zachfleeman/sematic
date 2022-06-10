@@ -79,7 +79,6 @@ pub fn get_noun_modifiers(
     // e.g. "thirty five", but should be "thirty-five"
     // Neet to still handle this case.
     if let Some(count) = construct_number(word, part) {
-      dbg!(&count);
       entity_mods.push(EntityProperties::Count { count });
 
       return;
@@ -294,13 +293,11 @@ pub fn construct_number(word: &Word, part: &SentenceParts) -> Option<f32> {
     .rev()
   {
     if prev_word.has_raw_disjunct("NN+") {
-      println!("NN+: {}", prev_word.get_cleaned_word());
       num_words.push(prev_word);
       break;
     }
 
     if prev_word.has_raw_disjunct("NA+") {
-      println!("NA+: {}", prev_word.get_cleaned_word());
       num_words.push(prev_word);
     }
 
