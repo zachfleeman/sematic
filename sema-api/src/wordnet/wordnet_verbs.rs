@@ -15,21 +15,17 @@ pub struct WordnetVerbs {
 impl WordnetVerbs {
   pub fn new() -> Result<Self> {
     println!("{:?}", std::env::current_dir());
-    let mut pwd = std::env::current_dir()?;
-    // pwd.push("data/wordnet_verbs.json");
-    // let s = pwd.into_os_string().into_string();
-    // dbg!(s);
-
+    // let mut pwd = std::env::current_dir()?;
     
     let config = CONFIG.get().unwrap();
-    pwd.push(&config.data_path);
-    pwd.push("wordnet_verbs.json");
-    dbg!(&pwd);
+    // pwd.push(&config.data_path);
+    // pwd.push("wordnet_verbs.json");
+    // dbg!(&pwd);
 
-    // let verbs_path = format!("{}/wordnet/verbs.json", config.data_path);
-    // println!("{}", verbs_path);
-    let verbs = File::open(pwd)?;
-    // let verbs = File::open("../data/wordnet_verbs.json")?;
+    // let verbs = File::open(pwd)?;
+    let path = format!("{}/wordnet_verbs.json", config.data_path);
+    dbg!(&path);
+    let verbs = File::open(&path)?;
     let reader = BufReader::new(verbs);
     let wordnet_verbs = serde_json::from_reader(reader)?;
 

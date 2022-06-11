@@ -37,6 +37,7 @@ use crate::middleware::auth::validator;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+  println!("current dir:{:?}", std::env::current_dir());
   color_backtrace::install();
   let config = config::server_config();
 

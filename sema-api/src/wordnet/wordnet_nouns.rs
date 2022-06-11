@@ -14,15 +14,18 @@ pub struct WordnetNouns {
 
 impl WordnetNouns {
   pub fn new() -> Result<Self> {
-    println!("{:?}", std::env::current_dir());
-    let mut pwd = std::env::current_dir()?;
+    // println!("{:?}", std::env::current_dir());
+    // let mut pwd = std::env::current_dir()?;
     
     let config = CONFIG.get().unwrap();
-    pwd.push(&config.data_path);
-    pwd.push("wordnet_nouns.json");
-    dbg!(&pwd);
+    // pwd.push(&config.data_path);
+    // pwd.push("wordnet_nouns.json");
+    // dbg!(&pwd);
 
-    let nouns = File::open(pwd)?;
+    // let nouns = File::open(pwd)?;
+    let path = format!("{}/wordnet_nouns.json", config.data_path);
+    dbg!(&path);
+    let nouns = File::open(&path)?;
     let reader = BufReader::new(nouns);
     let wordnet_nouns = serde_json::from_reader(reader)?;
 
