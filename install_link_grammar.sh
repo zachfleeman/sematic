@@ -1,4 +1,4 @@
-cd ./link-parser-rust-bindings/link-grammar
+cd /sema/link-parser-rust-bindings/link-grammar
 ./configure
 make
 make install
