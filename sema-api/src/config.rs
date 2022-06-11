@@ -14,6 +14,7 @@ pub struct Config {
   pub database_connection_timeout_sec: u64,
   pub database_url: String,
   pub jwt_secret: String,
+  pub data_path: String,
 }
 
 fn init() -> Config {

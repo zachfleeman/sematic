@@ -5,6 +5,8 @@ use std::io::BufReader;
 
 use once_cell::sync::OnceCell;
 
+use crate::config::CONFIG;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WordnetNouns {
   words: HashSet<String>,
@@ -12,7 +14,15 @@ pub struct WordnetNouns {
 
 impl WordnetNouns {
   pub fn new() -> Result<Self> {
-    let nouns = File::open("./data/wordnet_nouns.json")?;
+    println!("{:?}", std::env::current_dir());
+    let mut pwd = std::env::current_dir()?;
+    
+    let config = CONFIG.get().unwrap();
+    pwd.push(&config.data_path);
+    pwd.push("wordnet_nouns.json");
+    dbg!(&pwd);
+
+    let nouns = File::open(pwd)?;
     let reader = BufReader::new(nouns);
     let wordnet_nouns = serde_json::from_reader(reader)?;
 
