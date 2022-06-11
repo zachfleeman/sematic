@@ -1,4 +1,3 @@
-ls | cat
 cd ./link-parser-rust-bindings/link-grammar
 ./configure
 make

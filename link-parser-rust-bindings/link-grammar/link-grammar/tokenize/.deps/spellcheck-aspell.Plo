@@ -1,0 +1,1 @@
+tokenize/spellcheck-aspell.lo: tokenize/spellcheck-aspell.c
