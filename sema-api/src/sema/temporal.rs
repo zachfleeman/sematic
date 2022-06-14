@@ -87,15 +87,15 @@ pub struct Absolute {
 #[serde(untagged)]
 // #[serde(tag = "absolute_property_type")]
 pub enum AbsoluteProperties {
-  Year { year: i32 },
-  Month { month: i32 },
-  Week { week: i32 },
-  Day { day: i32 },
+  Year { year: f32 },
+  Month { month: f32 },
+  Week { week: f32 },
+  Day { day: f32 },
   DayOfWeek { day_of_week: DaysOfWeek },
-  Hour { hour: i32 },
-  Minute { minute: i32 },
-  Second { second: i32 },
-  Epoch { epoch: i32 }, // unix epoch
+  Hour { hour: f32 },
+  Minute { minute: f32 },
+  Second { second: f32 },
+  Epoch { epoch: f32 }, // unix epoch
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Display)]

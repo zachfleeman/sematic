@@ -3,7 +3,8 @@ use anyhow::Result;
 use link_parser_rust_bindings::lp::word::Word;
 
 use crate::{
-  nlp::sentence_parts::SentenceParts,
+  nlp::sentence_parts::{SentenceParts},
+  parse::numbers::construct_number,
   sema::{
     sema_sentence::SemaSentence,
     symbol::Symbol,
@@ -12,6 +13,11 @@ use crate::{
 };
 
 use super::link_parse::ParseState;
+
+pub static TIME_NOUNS: [&str; 18] = [
+  "second", "seconds", "minute", "minutes", "day", "days", "week", "weeks", "month", "months",
+  "year", "years", "hour", "hours", "weekend", "weekends", "weekday", "weekdays",
+];
 
 pub static LONG_MONTHS: [&str; 12] = [
   "January",
@@ -40,19 +46,29 @@ pub enum CalendarTypes {
 
 #[derive(Debug, Clone)]
 pub struct IRYear {
-  pub year: i32,
+  pub year: f32,
   pub calendar: CalendarTypes,
 }
 
 #[derive(Debug, Clone)]
 pub enum TemporalIR {
-  Month(i32, Word),
-  Day(i32, Word), // zero-indexed, so 0 is the first day of the month
+  Month(f32, Word),
+  Day(f32, Word), // zero-indexed, so 0 is the first day of the month
   Year(IRYear, Word),
   Word(String, Word),
+  Number(f32, Word),
   Punctuation,
-  // Specific words
+  // Time nouns
+  Second_,
+  Minute_,
+  Hour_,
   Day_,
+  Week_,
+  Month_,
+  Year_,
+  Weekend_,
+  Weekday_,
+  // Specific words
   Of_,
   Next_,
   Last_,
@@ -62,7 +78,7 @@ pub enum TemporalIR {
 }
 
 impl TemporalIR {
-  pub fn from_word(word: &Word) -> TemporalIR {
+  pub fn from_word(word: &Word, part: &SentenceParts) -> TemporalIR {
     let w = word.clone();
 
     if word.has_raw_disjunct("Xd+") || word.has_raw_disjunct("Xx-") {
@@ -73,16 +89,20 @@ impl TemporalIR {
       return TemporalIR::Month(month_index, w);
     }
 
-    if let Some(day) = get_day(word) {
+    if let Some(day) = get_day(word, part) {
       return TemporalIR::Day(day, w);
     }
 
-    if let Some(year) = get_year(word) {
+    if let Some(year) = get_year(word, part) {
       return TemporalIR::Year(year, w);
     }
 
     if let Some(day_of_week) = get_day_of_week(word) {
       return TemporalIR::DayOfWeek(day_of_week, w);
+    }
+
+    if let Some(num) = construct_number(word, part) {
+      return TemporalIR::Number(num, w);
     }
 
     // NOTE: this disjunct only applies if the following day of week is uppercase (e.g. "Monday")
@@ -103,8 +123,16 @@ impl TemporalIR {
       .get_cleaned_word()
       .as_str()
     {
-      "day" => TemporalIR::Day_,
       "of" => TemporalIR::Of_,
+      "second" | "seconds" => TemporalIR::Second_,
+      "minute" | "minutes" => TemporalIR::Minute_,
+      "hour" | "hours" => TemporalIR::Hour_,
+      "day" | "days" => TemporalIR::Day_,
+      "week" | "weeks" => TemporalIR::Week_,
+      "month" | "months" => TemporalIR::Month_,
+      "year" | "years" => TemporalIR::Year_,
+      "weekend" | "weekends" => TemporalIR::Weekend_,
+      "weekday" | "weekdays" => TemporalIR::Weekday_,
       _ => TemporalIR::NA,
     }
   }
@@ -132,7 +160,7 @@ impl TemporalIRState {
       .words
       .iter()
     {
-      let temporal_ir = TemporalIR::from_word(word);
+      let temporal_ir = TemporalIR::from_word(word, part);
       temporal_state
         .ir
         .push(temporal_ir);
@@ -182,6 +210,8 @@ pub fn parse_temporal(
   let mut output_sentence = sema_sentence.clone();
 
   let temporal_ir_state = TemporalIRState::new(part)?;
+
+  dbg!(&temporal_ir_state.groups);
 
   // NOTE: This match statement could use some refacoring
   for group in temporal_ir_state
@@ -316,10 +346,7 @@ pub fn parse_temporal(
           properties: vec![AbsoluteProperties::Month { month: *month }],
         });
 
-        parse_state.add_symbol(
-          &temporal.get_symbol(),
-          vec![month_word.position],
-        );
+        parse_state.add_symbol(&temporal.get_symbol(), vec![month_word.position]);
 
         output_sentence
           .temporal
@@ -355,6 +382,31 @@ pub fn parse_temporal(
           .temporal
           .push(temporal);
       }
+      [TemporalIR::Number(num, num_word), TemporalIR::Second_ | TemporalIR::Minute_ | TemporalIR::Hour_ | TemporalIR::Day_ | TemporalIR::Week_ | TemporalIR::Month_ | TemporalIR::Year_] => {
+        let prop = match &group[1] {
+            TemporalIR::Second_ => AbsoluteProperties::Second { second: *num },
+            TemporalIR::Minute_ => AbsoluteProperties::Minute { minute: *num },
+            TemporalIR::Hour_ => AbsoluteProperties::Hour { hour: *num },
+            TemporalIR::Day_ => AbsoluteProperties::Day { day: *num },
+            TemporalIR::Week_ => AbsoluteProperties::Week { week: *num },
+            TemporalIR::Month_ => AbsoluteProperties::Month { month: *num },
+            TemporalIR::Year_ => AbsoluteProperties::Year { year: *num },
+            TemporalIR::Weekend_ => todo!(),
+            TemporalIR::Weekday_ => todo!(),
+            _ => todo!(),
+        };
+
+        let temporal = Temporals::Absolute(Absolute {
+          symbol: symbol.next_symbol(),
+          properties: vec![prop],
+        });
+
+        parse_state.add_symbol(&temporal.get_symbol(), vec![num_word.position]);
+
+        output_sentence
+          .temporal
+          .push(temporal);
+      }
       _ => (),
     };
   }
@@ -374,7 +426,7 @@ pub fn is_month(word: &Word) -> bool {
       .any(|month| month == word_text)
 }
 
-pub fn get_month_index(word: &Word) -> Option<i32> {
+pub fn get_month_index(word: &Word) -> Option<f32> {
   let word_text = word
     .get_cleaned_word()
     .to_lowercase();
@@ -388,20 +440,33 @@ pub fn get_month_index(word: &Word) -> Option<i32> {
         .position(|month| month.to_lowercase() == word_text)
         .or_else(|| None)
     })
-    .map(|index| index as i32)
+    .map(|index| index as f32)
 }
 
-pub fn get_day(word: &Word) -> Option<i32> {
+pub fn get_day(word: &Word, part: &SentenceParts) -> Option<f32> {
   // the TM disjunct connects months to days.
   // Can this be used?
   if word.has_raw_disjunct("Dmcn+") {
     return None;
   }
 
+  if let Some(next_word) = part
+    .links
+    .get_next_word(word)
+  {
+    if TIME_NOUNS.contains(
+      &next_word
+        .get_cleaned_word()
+        .as_str(),
+    ) {
+      return None;
+    }
+  }
+
   let mut num = None;
   let word_text = word.get_cleaned_word();
 
-  if let Ok(num_val) = word_text.parse::<i32>() {
+  if let Ok(num_val) = word_text.parse::<f32>() {
     num = Some(num_val);
   }
 
@@ -410,20 +475,20 @@ pub fn get_day(word: &Word) -> Option<i32> {
     || word_text.ends_with("rd")
     || word_text.ends_with("th")
   {
-    if let Ok(num_val) = word_text[..word_text.len() - 2].parse::<i32>() {
+    if let Ok(num_val) = word_text[..word_text.len() - 2].parse::<f32>() {
       num = Some(num_val);
     }
   }
 
   if let Some(num_val) = num {
-    if num_val < 1 || num_val > 31 {
+    if num_val < 1. || num_val > 31. {
       num = None;
     }
   }
 
   // zero index the day
   if let Some(num_val) = num {
-    return Some(num_val - 1);
+    return Some(num_val - 1.);
   }
 
   num
@@ -435,18 +500,31 @@ pub fn get_day_of_week(word: &Word) -> Option<DaysOfWeek> {
   DaysOfWeek::from_str(&word_text)
 }
 
-pub fn get_year(word: &Word) -> Option<IRYear> {
+pub fn get_year(word: &Word, part: &SentenceParts) -> Option<IRYear> {
   // Not sure if this is the best thing to do.
   if word.has_raw_disjunct("Dmcn+") {
     return None;
+  }
+
+  if let Some(next_word) = part
+    .links
+    .get_next_word(word)
+  {
+    if TIME_NOUNS.contains(
+      &next_word
+        .get_cleaned_word()
+        .as_str(),
+    ) {
+      return None;
+    }
   }
 
   // NOTE: years are kinda recognized by the link-parser with [!<YEAR-DATE>]
   // don't know if using it would be helpful here, but maybe...
 
   let word_text = word.get_cleaned_word();
-  if let Ok(num_val) = word_text.parse::<i32>() {
-    if num_val > 0 && num_val < 2100 {
+  if let Ok(num_val) = word_text.parse::<f32>() {
+    if num_val > 0. && num_val < 2100. {
       return Some(IRYear {
         year: num_val,
         calendar: CalendarTypes::Julian,
