@@ -70,6 +70,7 @@ async fn text_to_json(
   payload: web::Json<TextToJSONRequestObject>,
   link_parser: web::Data<Arc<Mutex<LinkParser>>>,
 ) -> Result<impl Responder, Error> {
+  println!("REACHING THIS POINT, BROCH");
   let lp = link_parser
     .lock()
     .await;
