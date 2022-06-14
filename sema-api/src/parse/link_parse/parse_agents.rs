@@ -92,7 +92,7 @@ pub fn parse_agents(
     }
   }
 
-  for name_vec in all_names.into_iter() {
+  for name_vec in all_names.iter() {
     let name_props = match name_vec.len() {
       1 => {
         let name = name_vec[0]
@@ -127,6 +127,13 @@ pub fn parse_agents(
     };
 
     let mut person = Person::new(symbol);
+
+    let name_positions = name_vec
+      .iter()
+      .map(|lp_word| lp_word.position)
+      .collect::<Vec<_>>();
+
+    parse_state.add_symbol(&person.symbol, name_positions);
 
     person
       .properties

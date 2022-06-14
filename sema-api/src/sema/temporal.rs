@@ -72,6 +72,8 @@ pub enum RelativeProperties {
   After { after: String },
   During { during: String },
   When { when: String },
+  Previous { previous: String },
+  Next { next: String },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -106,6 +108,33 @@ pub enum DaysOfWeek {
   Friday,
   Saturday,
   Sunday,
+}
+
+impl DaysOfWeek {
+  pub fn get_symbol(&self) -> String {
+    match self {
+      DaysOfWeek::Monday => "monday".to_owned(),
+      DaysOfWeek::Tuesday => "tuesday".to_owned(),
+      DaysOfWeek::Wednesday => "wednesday".to_owned(),
+      DaysOfWeek::Thursday => "thursday".to_owned(),
+      DaysOfWeek::Friday => "friday".to_owned(),
+      DaysOfWeek::Saturday => "saturday".to_owned(),
+      DaysOfWeek::Sunday => "sunday".to_owned(),
+    }
+  }
+
+  pub fn from_str(s: &str) -> Option<Self> {
+    match s.to_lowercase().as_ref() {
+      "monday" => Some(DaysOfWeek::Monday),
+      "tuesday" => Some(DaysOfWeek::Tuesday),
+      "wednesday" => Some(DaysOfWeek::Wednesday),
+      "thursday" => Some(DaysOfWeek::Thursday),
+      "friday" => Some(DaysOfWeek::Friday),
+      "saturday" => Some(DaysOfWeek::Saturday),
+      "sunday" => Some(DaysOfWeek::Sunday),
+      _ => None,
+    }
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

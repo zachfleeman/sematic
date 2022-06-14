@@ -134,6 +134,25 @@ pub fn connect_actions(
         }
       }
 
+      if aw.has_disjunct(LinkTypes::I, ConnectorPointing::Left) {
+        // Left Pointing I means the the verb has an infinitive (will/must/etc) to the left of it.
+        // Need to still find the agent in a situation like "I will chase the cat".
+        let possible_i = part.links.words.get(aw.position - 2);
+
+        if let Some(i_word) = possible_i {
+          parse_state
+          .get_symbols_by_position(i_word.position)
+          .iter()
+          .for_each(|s| {
+            action
+              .properties
+              .push(ActionProperties::Agent {
+                agent: s.to_owned(),
+              });
+          });
+        }
+      }
+
       if aw.has_disjunct(LinkTypes::O, ConnectorPointing::Right) {
         // Right Pointing O link exists, which means that the verb has an Arg 1/Object link
 

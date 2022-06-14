@@ -85,7 +85,8 @@ pub fn get_noun_modifiers(
     }
   }
 
-  if word.has_pos(POS::Adjective) {
+  // "DTi+" is used to link determiners with nouns
+  if word.has_pos(POS::Adjective) && !word.has_raw_disjunct("DTi+") {
     let mut amplifiers = vec![];
 
     if let Some(prev_word) = part
