@@ -1,1 +1,4 @@
 /target
+/link-grammar/link-grammar
+/link-grammar/bindings
+/link-grammar/link-parser
