@@ -183,6 +183,9 @@ pub fn parse_temporal(
 
   let temporal_ir_state = TemporalIRState::new(part)?;
 
+  // println!("{:?}", temporal_ir_state.groups);
+  dbg!(&temporal_ir_state.groups);
+
   // NOTE: This match statement could use some refacoring
   for group in temporal_ir_state
     .groups
