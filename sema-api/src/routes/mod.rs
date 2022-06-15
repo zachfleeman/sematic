@@ -106,10 +106,12 @@ async fn text_to_json(
     json!({
       "sema_sentences": sema_sentences,
       "parts": &all_parts,
+      "version": 0.001,
     })
   } else {
     json!({
       "sema_sentences": sema_sentences,
+      "version": 0.001,
     })
   };
 
