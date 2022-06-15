@@ -4,6 +4,8 @@ WORKDIR /sema
 
 COPY . .
 
+## Cache counter: 1
+
 # Set tz to prevent warnings while install dependencies
 RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone
 
@@ -27,6 +29,7 @@ RUN chmod u+r+x install_link_grammar.sh
 RUN ./install_link_grammar.sh
 
 # WORKDIR /sema
+RUN cargo clean
 RUN cargo build --release
 
 WORKDIR /sema/target/release
