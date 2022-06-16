@@ -10,7 +10,10 @@ use crate::{
   },
 };
 
-use link_parser_rust_bindings::{lp::word::Word as LPWord, pos::POS};
+use link_parser_rust_bindings::{
+  lp::{disjunct::ConnectorPointing, word::Word as LPWord, link_types::LinkTypes},
+  pos::POS,
+};
 
 use super::link_parse::ParseState;
 
@@ -79,7 +82,10 @@ pub fn parse_agents(
     }
 
     if word.word_is_capitalized() {
-      if word.morpho_guessed && HumanNames::contains(&cleaned_word) {
+      if word.morpho_guessed
+        && HumanNames::contains(&cleaned_word)
+        && !word.has_disjunct(LinkTypes::G, ConnectorPointing::Left) // G connects proper nouns words together
+      {
         current_name.push(word.clone());
       }
 
@@ -122,7 +128,9 @@ pub fn parse_agents(
           .collect::<Vec<String>>()
           .join("_");
 
-        vec![PersonProperties::Name { name: combined_name }]
+        vec![PersonProperties::Name {
+          name: combined_name,
+        }]
       }
     };
 

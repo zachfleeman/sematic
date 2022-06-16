@@ -27,7 +27,7 @@ use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 use routes::{health, srl, text_to_json};
 // use state::State;
 
-use crate::nlp::human_names::HumanNames;
+use crate::{nlp::human_names::HumanNames, wordnet::wordnet_noun_objects::init_wordnet_noun_objects};
 use crate::nlp::nlp_rule::NLPRule;
 use crate::wordnet::wordnet_nouns::WordnetNouns;
 use crate::wordnet::wordnet_verbs::WordnetVerbs;
@@ -58,6 +58,7 @@ async fn main() -> std::io::Result<()> {
   // Init Wordnet collections
   WordnetVerbs::init();
   WordnetNouns::init();
+  init_wordnet_noun_objects().expect("Failed to init wordnet noun objects");
 
   // Init Human Names
   HumanNames::init();

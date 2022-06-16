@@ -23,6 +23,7 @@ pub struct Word {
   pub unknown_word: bool,
   pub year_date: bool,
   pub day_ordinals: bool,
+  pub capitalized: bool,
 }
 
 impl Word {
@@ -43,6 +44,7 @@ impl Word {
     let pos = POS::from_lp_word(lp_word);
 
     let morpho_guessed = word.contains("[!");
+    let capitalized = word.contains("[!<CAPITALIZED-WORDS>]");
     let unknown_word = word.contains("[?]");
 
     let year_date = word.contains("[!<YEAR-DATE>]");
@@ -57,6 +59,7 @@ impl Word {
       unknown_word,
       year_date,
       day_ordinals,
+      capitalized,
     }
   }
 

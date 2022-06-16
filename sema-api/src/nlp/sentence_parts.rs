@@ -1,7 +1,7 @@
 use super::chunk::Chunk;
 use super::nlp_rule::NLPRule;
 use anyhow::Result;
-use link_parser_rust_bindings::lp::sentence::Sentence as LPSentence;
+use link_parser_rust_bindings::lp::{sentence::Sentence as LPSentence, word::Word as LPWord};
 use nlprule::types::owned::Token;
 
 use std::time::Instant;
@@ -167,5 +167,17 @@ impl SentenceParts {
       .skip(start)
       .take(end - start + 1)
       .collect::<Vec<Token>>()
+  }
+
+  pub fn get_word_token(&self, word: &LPWord) -> Option<Token> {
+    self.tokens.get(word.position - 1).cloned()
+  }
+
+  pub fn get_word_lemma(&self, word: &LPWord) -> String {
+    if let Some(token) = self.get_word_token(word) {
+      token.word.tags[0].lemma.clone().as_ref().to_string()
+    } else {
+      word.get_cleaned_word()
+    }
   }
 }
