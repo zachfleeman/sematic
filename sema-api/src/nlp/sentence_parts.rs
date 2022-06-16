@@ -170,7 +170,15 @@ impl SentenceParts {
   }
 
   pub fn get_word_token(&self, word: &LPWord) -> Option<Token> {
-    self.tokens.get(word.position - 1).cloned()
+    if word.position == 0 {
+      return None;
+    }
+
+    if let Some(token) = self.tokens.get(word.position - 1) {
+      Some(token.clone())
+    } else {
+      None
+    }
   }
 
   pub fn get_word_lemma(&self, word: &LPWord) -> String {
