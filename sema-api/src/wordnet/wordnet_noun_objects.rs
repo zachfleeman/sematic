@@ -5,8 +5,6 @@ use std::io::BufReader;
 
 use once_cell::sync::OnceCell;
 
-use crate::config::CONFIG;
-
 pub type Tree = HashMap<String, TreeNode>;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,9 +13,8 @@ pub struct TreeNode {
   pub branches: Tree,
 }
 
-pub fn init_wordnet_noun_objects() -> Result<()> {
-  let config = CONFIG.get().unwrap();
-  let path = format!("{}/wordnet_noun_objects.json", config.data_path);
+pub fn init_wordnet_noun_objects(data_path: &str) -> Result<()> {
+  let path = format!("{}/wordnet_noun_objects.json", data_path);
   let noun_objects = File::open(&path)?;
   let reader = BufReader::new(noun_objects);
   let wordnet_noun_objects = serde_json::from_reader(reader)?;

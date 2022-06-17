@@ -230,6 +230,10 @@ pub fn get_noun_modifiers(
     return;
   }
 
+  if word.has_raw_disjunct("Dm+") {
+    //
+  }
+
   if word.has_raw_disjunct("Dmcn+") {
     // got a number on our hands.
     // NOTE: a fuzzy case is when number should be hyphenated, but are not.

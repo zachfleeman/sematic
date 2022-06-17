@@ -1,0 +1,46 @@
+[
+  {
+    "sentence": "Find me all the books",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "book",
+          "symbol": "$3",
+          "properties": [
+            {
+              "modifier_type": "all",
+              "modifier": null,
+              "amplifiers": []
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "find",
+          "symbol": "$2",
+          "properties": [
+            {
+              "benefactive": "$1"
+            },
+            {
+              "patient": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  }
+]

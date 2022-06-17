@@ -207,12 +207,48 @@ pub fn connect_actions(
               .find(|w| w.has_disjunct(LinkTypes::O, ConnectorPointing::Left))
               .expect("No first left pointing O link found");
 
+            if first_o.has_raw_disjunct("Ox-") {
+              // first O is a pronoun (me, she, I, it, etc)
+              parse_state.get_symbols_by_position(first_o.position).iter().for_each(|s| {
+                action
+                  .properties
+                  .push(ActionProperties::Benefactive {
+                    benefactive: s.to_owned(),
+                  });
+              });
+            }
+
             let second_o = part
-            .links
-            .get_next_words_skip(first_o, 1)
-            .into_iter()
-            .find(|w| w.has_disjunct(LinkTypes::O, ConnectorPointing::Left))
-            .expect("No Second left pointing O link found");
+              .links
+              .get_next_words_skip(first_o, 1)
+              .into_iter()
+              .find(|w| w.has_disjunct(LinkTypes::O, ConnectorPointing::Left))
+              .expect("No Second left pointing O link found");
+
+            let second_o_symbols = parse_state.get_symbols_by_position(second_o.position);
+
+            // TODO: not sure yet how best to handle single/plural/multiple, but the info is encoded in the links.
+            // single
+            if second_o.has_raw_disjunct("Os-") {
+              second_o_symbols.iter().for_each(|s| {
+                action
+                  .properties
+                  .push(ActionProperties::Patient {
+                    patient: s.to_owned(),
+                  });
+              });
+            }
+
+            // plural
+            if second_o.has_raw_disjunct("Op-") {
+              second_o_symbols.iter().for_each(|s| {
+                action
+                  .properties
+                  .push(ActionProperties::Patient {
+                    patient: s.to_owned(),
+                  });
+              });
+            }
 
             dbg!(&first_o);
 

@@ -2,5 +2,6 @@
 
 members = [
   "sema-api",
-  "link-parser-rust-bindings"
+  "link-parser-rust-bindings",
+  "sema-test",
 ]

@@ -27,6 +27,7 @@ pub fn parse_agents(
 ) -> Result<()> {
   println!("Parse Agents");
   // "I" and "My" detection
+  // Handling of basic people pronouns
   let ego_words = part
     .links
     .words
@@ -35,14 +36,6 @@ pub fn parse_agents(
       let w = lp_word.get_cleaned_word().to_lowercase();
       let w_ref = w.as_str();
       EGO_WORDS.contains(&w_ref)
-      // lp_word
-      //   .word
-      //   .to_lowercase()
-      //   == "i"
-      //   || lp_word
-      //     .word
-      //     .to_lowercase()
-      //     == "my"
     })
     .collect::<Vec<_>>();
 

@@ -5,18 +5,15 @@ use std::io::BufReader;
 
 use once_cell::sync::OnceCell;
 
-use crate::config::CONFIG;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HumanNames {
   names: HashSet<String>,
 }
 
 impl HumanNames {
-  pub fn new() -> Result<Self> {
-    let config = CONFIG.get().unwrap();
-    let path = format!("{}/human_names.json", config.data_path);
-    dbg!(&path);
+  pub fn new(data_path: &str) -> Result<Self> {
+    let path = format!("{}/human_names.json", data_path);
+    println!("path: {}", path);
     let names = File::open(&path)?;
     let reader = BufReader::new(names);
     let json: HashMap<String, usize> = serde_json::from_reader(reader)?;
@@ -26,8 +23,8 @@ impl HumanNames {
     Ok(HumanNames { names })
   }
 
-  pub fn init() {
-    let human_names = HumanNames::new().expect("Unable to create HumanNames instance");
+  pub fn init(data_path: &str) {
+    let human_names = HumanNames::new(data_path).expect("Unable to create HumanNames instance");
     HUMAN_NAMES.set(human_names).expect("Unable to set HUMAN_NAMES");
   }
 
