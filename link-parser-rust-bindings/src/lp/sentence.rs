@@ -186,6 +186,11 @@ impl Sentence {
     self.words[word.position..].iter().collect::<Vec<&Word>>()
   }
 
+  pub fn get_next_words_skip(&self, word: &Word, skip: usize) -> Vec<&Word> {
+    let skip = word.position + skip;
+    self.words[skip..].iter().collect::<Vec<&Word>>()
+  }
+
 }
 
 

@@ -15,48 +15,12 @@ use crate::{
 };
 
 use super::link_parse::ParseState;
-use crate::parse::link_parse::parse_temporal::TIME_NOUNS;
+// use crate::parse::link_parse::parse_temporal::TIME_NOUNS;
 use crate::parse::numbers::*;
 use crate::wordnet::wordnet_noun_objects::{Tree, WORDNET_NOUN_OBJECTS};
 
-// pub fn recurse(words: Vec<Word>, part: &SentenceParts, accum: &mut Vec<String>) {
-// }
 
-// pub fn collect_nouns(words: Vec<Word>) -> Result<Vec<Vec<Word>>> {
-//   let mut local_words = words.clone();
-//   let mut collected_nouns = vec![];
-//   let mut accum = vec![];
-
-//   let noun_objects = WORDNET_NOUN_OBJECTS
-//     .get()
-//     .unwrap();
-
-//   while local_words.len() > 0 {
-//     if let Some(word) = local_words.pop() {
-//       if let Some(pos) = word.pos {
-//         if matches!(
-//           pos,
-//           POS::Noun | POS::NounUncountable | POS::PluralCountNoun | POS::SingularMassNoun
-//         ) | word.morpho_guessed
-//         {
-//           if noun_objects.contains_key(&word.get_cleaned_word()) {
-//             accum.push(word);
-//           } else {
-//             collected_nouns.push(accum);
-//             accum = vec![];
-//           }
-//         } else {
-//           collected_nouns.push(accum);
-//           accum = vec![];
-//         }
-//       }
-//     }
-//   }
-
-//   Ok(collected_nouns)
-// }
-
-pub fn recurse(
+pub fn build_noun_phrases(
   words: &mut Vec<Word>,
   part: &SentenceParts,
   branch: &Tree,
@@ -92,7 +56,7 @@ pub fn recurse(
 
           // println!("noun_phrase.push 1");
           noun_phrase.push(word);
-          recurse(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
+          build_noun_phrases(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
         } else {
           // println!("else 1");
           if noun_phrase.len() > 0 {
@@ -126,7 +90,7 @@ pub fn recurse(
 
         // println!("noun_phrase.push 2");
         noun_phrase.push(word);
-        recurse(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
+        build_noun_phrases(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
       } else {
         // println!("else 3");
         if noun_phrase.len() > 0 {
@@ -173,7 +137,7 @@ pub fn parse_entities(
   let mut noun_phrase_arrays = vec![];
 
   while words.len() > 0 {
-    recurse(
+    build_noun_phrases(
       &mut words,
       part,
       noun_objects,
@@ -182,19 +146,36 @@ pub fn parse_entities(
     )?;
   }
 
+  pub fn get_entity_key(noun_phrase: &Vec<Word>, part: &SentenceParts) -> Result<String> {
+    let entity_key = match noun_phrase.len() {
+      1 => {
+        let word = noun_phrase
+          .get(0)
+          .unwrap();
+
+        part.get_word_lemma(word).to_lowercase()
+      }
+      _ => {
+        noun_phrase
+          .iter()
+          .map(|word| {
+            word
+              .get_cleaned_word()
+              .to_lowercase()
+          })
+          .collect::<Vec<String>>()
+          .join("_")
+      }
+    };
+
+    Ok(entity_key)
+}
+
   // println!("noun_phrase_arrays: {:?}", noun_phrase_arrays.len());
   // dbg!(&noun_phrase_arrays);
 
   for noun_phrase in noun_phrase_arrays {
-    let entity_key = noun_phrase
-      .iter()
-      .map(|word| {
-        word
-          .get_cleaned_word()
-          .to_lowercase()
-      })
-      .collect::<Vec<String>>()
-      .join("_");
+    let entity_key = get_entity_key(&noun_phrase, part)?;
 
     if let Some(first_word) = noun_phrase.first() {
       let mut entity = Entity::new(entity_key, symbol);
@@ -226,19 +207,6 @@ pub fn parse_entities(
     
 
   }
-
-  // Assuming single word nouns for now.
-  // let known_nouns = part
-  //   .links
-  //   .get_known_nouns()
-  //   .into_iter()
-  //   .filter(|w| {
-  //     !TIME_NOUNS.contains(
-  //       &w.get_cleaned_word()
-  //         .as_str(),
-  //     )
-  //   })
-  //   .collect::<Vec<_>>();
 
   Ok(output_sentence)
 }

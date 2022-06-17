@@ -17,6 +17,8 @@ use link_parser_rust_bindings::{
 
 use super::link_parse::ParseState;
 
+pub static EGO_WORDS: [&str; 3] = ["I", "my", "me"];
+
 pub fn parse_agents(
   sema_sentence: &mut SemaSentence,
   part: &SentenceParts,
@@ -30,14 +32,17 @@ pub fn parse_agents(
     .words
     .iter()
     .filter(|lp_word| {
-      lp_word
-        .word
-        .to_lowercase()
-        == "i"
-        || lp_word
-          .word
-          .to_lowercase()
-          == "my"
+      let w = lp_word.get_cleaned_word().to_lowercase();
+      let w_ref = w.as_str();
+      EGO_WORDS.contains(&w_ref)
+      // lp_word
+      //   .word
+      //   .to_lowercase()
+      //   == "i"
+      //   || lp_word
+      //     .word
+      //     .to_lowercase()
+      //     == "my"
     })
     .collect::<Vec<_>>();
 

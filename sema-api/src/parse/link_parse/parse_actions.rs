@@ -27,20 +27,18 @@ pub fn parse_actions(
     .into_iter()
     .filter(|w| !w.has_raw_disjunct("I+")) // Infinitives can be verbs. Don't know if this is for all cases
   {
-    let mut action_type = v.get_cleaned_word();
+    // let mut action_type = v.get_cleaned_word();
+    let mut action_type = part.get_word_lemma(&v);
 
     // Need to use the lemma of the verb if it's past tense.
     if matches!(v.pos, Some(POS::VerbPastTense | POS::VerbPastTense2)) {
-
-      // get matching token for word. 
-      if let Some(token) = part.tokens.get(v.position - 1) {
-        // first token tag should be the current tense lemma of the word.
-        let lemma = token.word.tags[0].lemma.as_ref();
-        action_type = lemma.to_owned();
-      }
+      action_type = part.get_word_lemma(&v);
     }
+
     let action = Action::new(action_type, symbol);
+
     parse_state.add_symbol(&action.symbol, vec![v.position]);
+    
     actions.push(action);
   }
 

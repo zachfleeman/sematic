@@ -84,6 +84,14 @@ impl Word {
       .any(|disjunct| disjunct.raw == raw_disjunct)
   }
 
+  pub fn get_disjuncts(&self, link_type: LinkTypes) -> Vec<&Disjunct> {
+    self
+      .disjuncts
+      .iter()
+      .filter(|disjunct| link_type.eq(&disjunct.link_type))
+      .collect()
+  }
+
   pub fn get_raw_disjuncts(&self) -> Vec<String> {
     self
       .disjuncts

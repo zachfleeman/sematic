@@ -123,6 +123,7 @@ impl TemporalIR {
       .get_cleaned_word()
       .as_str()
     {
+      "," => TemporalIR::Punctuation,
       "of" => TemporalIR::Of_,
       "second" | "seconds" => TemporalIR::Second_,
       "minute" | "minutes" => TemporalIR::Minute_,
@@ -194,9 +195,6 @@ impl TemporalIRState {
       }
     }
 
-    // dbg!(&temporal_state.ir);
-    // dbg!(&temporal_state.groups);
-
     Ok(temporal_state)
   }
 }
@@ -211,7 +209,8 @@ pub fn parse_temporal(
 
   let temporal_ir_state = TemporalIRState::new(part)?;
 
-  dbg!(&temporal_ir_state.groups);
+  // dbg!(&temporal_ir_state.ir);
+  // dbg!(&temporal_ir_state.groups);
 
   // NOTE: This match statement could use some refacoring
   for group in temporal_ir_state
@@ -238,6 +237,7 @@ pub fn parse_temporal(
           .temporal
           .push(temporal);
       }
+      // March 2nd 2020
       [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word), TemporalIR::Year(year, year_word)] =>
       {
         let temporal = Temporals::Absolute(Absolute {
@@ -519,17 +519,19 @@ pub fn get_year(word: &Word, part: &SentenceParts) -> Option<IRYear> {
     }
   }
 
-  // NOTE: years are kinda recognized by the link-parser with [!<YEAR-DATE>]
-  // don't know if using it would be helpful here, but maybe...
-
-  let word_text = word.get_cleaned_word();
-  if let Ok(num_val) = word_text.parse::<f32>() {
-    if num_val > 0. && num_val < 2100. {
-      return Some(IRYear {
-        year: num_val,
-        calendar: CalendarTypes::Julian,
-      });
+  // link-parser recognizes partially recognized years with [!<YEAR-DATE>]
+  // just using this to prevent false positives for years.
+  if word.year_date {
+    let word_text = word.get_cleaned_word();
+    if let Ok(num_val) = word_text.parse::<f32>() {
+      if num_val > 0. && num_val < 2100. {
+        return Some(IRYear {
+          year: num_val,
+          calendar: CalendarTypes::Julian,
+        });
+      }
     }
   }
+
   None
 }

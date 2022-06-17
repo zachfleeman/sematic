@@ -5,11 +5,8 @@ use link_parser_rust_bindings::lp::{
 use std::collections::HashMap;
 
 use super::{
-  parse_actions::parse_actions,
-  parse_agents::parse_agents,
-  parse_entities::parse_entities,
-  parse_events::parse_events,
-  parse_temporal::parse_temporal,
+  parse_actions::parse_actions, parse_agents::parse_agents, parse_entities::parse_entities,
+  parse_events::parse_events, parse_temporal::parse_temporal,
 };
 
 use crate::{
@@ -137,41 +134,93 @@ pub fn connect_actions(
       if aw.has_disjunct(LinkTypes::I, ConnectorPointing::Left) {
         // Left Pointing I means the the verb has an infinitive (will/must/etc) to the left of it.
         // Need to still find the agent in a situation like "I will chase the cat".
-        let possible_i = part.links.words.get(aw.position - 2);
+        let possible_i = part
+          .links
+          .words
+          .get(aw.position - 2);
 
         if let Some(i_word) = possible_i {
           parse_state
-          .get_symbols_by_position(i_word.position)
-          .iter()
-          .for_each(|s| {
-            action
-              .properties
-              .push(ActionProperties::Agent {
-                agent: s.to_owned(),
-              });
-          });
+            .get_symbols_by_position(i_word.position)
+            .iter()
+            .for_each(|s| {
+              action
+                .properties
+                .push(ActionProperties::Agent {
+                  agent: s.to_owned(),
+                });
+            });
         }
       }
 
+      // "O" connects transitive verbs to their objects, direct or indirect: "She SAW ME", "I GAVE HIM the BOOK".
       if aw.has_disjunct(LinkTypes::O, ConnectorPointing::Right) {
+        // Verbs can have two right pointing links. e.g O+ O*n+
+        // How to handle this?
         // Right Pointing O link exists, which means that the verb has an Arg 1/Object link
+        let aw_o_disjuncts = aw.get_disjuncts(LinkTypes::O);
 
-        for word in part.links.words[aw.position + 1..].iter() {
-          if word.has_disjunct(LinkTypes::O, ConnectorPointing::Left) {
-            // Left Pointing O link exists, which means that the verb has an Arg 1/Object link
+        match aw_o_disjuncts.len() {
+          1 => {
+            for word in part.links.words[aw.position + 1..].iter() {
+              if word.has_disjunct(LinkTypes::O, ConnectorPointing::Left) {
+                // Left Pointing O link exists, which means that the verb has an Arg 1/Object link
 
-            // if word is a single (has subscript of "s")
-            parse_state
-              .get_symbols_by_position(word.position)
-              .iter()
-              .for_each(|s| {
-                action
-                  .properties
-                  .push(ActionProperties::Patient {
-                    patient: s.to_owned(),
+                // if word is a single (has subscript of "s")
+                parse_state
+                  .get_symbols_by_position(word.position)
+                  .iter()
+                  .for_each(|s| {
+                    action
+                      .properties
+                      .push(ActionProperties::Patient {
+                        patient: s.to_owned(),
+                      });
                   });
-              });
+              }
+            }
           }
+          2 => {
+            // One O link is to the patient, and other is to a benefactive, I think
+            /*
+            from: https://www.abisource.com/projects/link-grammar/dict/section-O.html
+            "Other verbs have two O+ connectors, one or both of which may
+            be optional ("I gave him five dollars", "I gave five
+            dollars"). In this case, the first object may either be a
+            pronoun or a noun; however, if it is a noun, the second may
+            not be a pronoun: "I gave him the money", "I gave Jane the
+            money", "*I gave Jane it", "*I gave him it". This is parallel
+            to the case of particles; in transitive verbs which take
+            particles like "up" or "out", the particle may not precede a
+            pronoun ("*We sorted out them").  The O*n+/Ox- subscripts,
+            developed for that purpose, are used here as well. The second
+            O+ connector on two-object verbs has O*n+; pronouns have Ox-;
+            "Oxn" is prohibited in post-processing. (See "K".)""
+            */
+            // Pronouns have Ox-, but not Oxn
+            // Second O+ connector on two-object verbs has O*n+; pronouns have Ox-;
+
+            let first_o = part
+              .links
+              .get_next_words(aw)
+              .into_iter()
+              .find(|w| w.has_disjunct(LinkTypes::O, ConnectorPointing::Left))
+              .expect("No first left pointing O link found");
+
+            let second_o = part
+            .links
+            .get_next_words_skip(first_o, 1)
+            .into_iter()
+            .find(|w| w.has_disjunct(LinkTypes::O, ConnectorPointing::Left))
+            .expect("No Second left pointing O link found");
+
+            dbg!(&first_o);
+
+            dbg!(&second_o);
+            // .ok()
+            // .expect("No first O+ link found");
+          }
+          _ => (),
         }
       }
     }
