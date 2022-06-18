@@ -123,16 +123,19 @@ async fn main() -> Result<()> {
   }
 
   let passes = results.iter().filter(|r| r.status == TestResultStatus::Success).count();
-  let fails = results.iter().filter(|r| r.status == TestResultStatus::Failure).count();
+  let fails = results.iter().filter(|r| r.status == TestResultStatus::Failure).collect::<Vec<_>>();
+  let fails_count = fails.len();
 
   println!("total: {}", results.len());
   println!("passed: {}", style(passes).green());
-  println!("failed: {}", style(fails).red());
+  println!("failed: {}", style(fails_count).red());
 
-  if fails == 0 {
+  if fails_count == 0 {
     term.write_line(&format!("{}", style("All tests passed").green()))?;
   } else {
     term.write_line(&format!("{}", style("Some tests failed").red()))?;
+
+    dbg!(&fails);
   }
 
   // dbg!(&results);

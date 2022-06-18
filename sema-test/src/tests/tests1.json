@@ -15,9 +15,7 @@
           "symbol": "$3",
           "properties": [
             {
-              "modifier_type": "all",
-              "modifier": null,
-              "amplifiers": []
+              "quantity": "all"
             }
           ]
         }
@@ -35,6 +33,61 @@
             },
             {
               "patient": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "Jeff bought ten ice cream cones for John",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "person",
+          "symbol": "$1",
+          "properties": [
+            {
+              "name": "jeff"
+            }
+          ]
+        },
+        {
+          "agent_type": "person",
+          "symbol": "$2",
+          "properties": [
+            {
+              "name": "john"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "ice_cream_cone",
+          "symbol": "$4",
+          "properties": [
+            {
+              "count": 10.0
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "buy",
+          "symbol": "$3",
+          "properties": [
+            {
+              "agent": "$1"
+            },
+            {
+              "patient": "$4"
             }
           ]
         }

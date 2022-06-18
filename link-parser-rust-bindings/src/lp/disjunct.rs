@@ -7,7 +7,7 @@ use super::link_types::LinkTypes;
 
 // use links::*;
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ConnectorPointing {
   Left,
   Right,

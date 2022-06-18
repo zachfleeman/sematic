@@ -191,6 +191,9 @@ impl Sentence {
     self.words[skip..].iter().collect::<Vec<&Word>>()
   }
 
+  pub fn find_prev_word_with_link(&self, word: &Word, link_type: LinkTypes, conn_pointing: ConnectorPointing) -> Option<&Word> {
+    self.words[..word.position].iter().find(|w| w.has_disjunct(link_type, conn_pointing))
+  }
 }
 
 

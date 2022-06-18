@@ -53,9 +53,6 @@ async fn main() -> std::io::Result<()> {
   init_nlp_cells(&config.data_path);
   init_wordnet_cells(&config.data_path);
 
-  // Init Human Names
-  // HumanNames::init();
-
   dbg!(&config);
 
   // let pool = PgPoolOptions::new()

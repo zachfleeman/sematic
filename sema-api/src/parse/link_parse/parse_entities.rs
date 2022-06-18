@@ -8,7 +8,7 @@ use link_parser_rust_bindings::{
 use crate::{
   nlp::sentence_parts::SentenceParts,
   sema::{
-    entity::{Entity, EntityProperties},
+    entity::{Entity, EntityProperties, Quantities},
     sema_sentence::SemaSentence,
     symbol::Symbol,
   },
@@ -18,7 +18,6 @@ use super::link_parse::ParseState;
 // use crate::parse::link_parse::parse_temporal::TIME_NOUNS;
 use crate::parse::numbers::*;
 use crate::wordnet::wordnet_noun_objects::{Tree, WORDNET_NOUN_OBJECTS};
-
 
 pub fn build_noun_phrases(
   words: &mut Vec<Word>,
@@ -39,10 +38,11 @@ pub fn build_noun_phrases(
       .unwrap_or(POS::Undefined);
 
     if noun_phrase.len() == 0 {
-      if matches!(
+      if (matches!(
         pos,
         POS::Noun | POS::NounUncountable | POS::PluralCountNoun | POS::SingularMassNoun
-      ) | word.morpho_guessed
+      ) | word.morpho_guessed)
+        && !word.has_raw_disjunct("J+")
       {
         let lemma = part
           .get_word_lemma(&word)
@@ -153,23 +153,23 @@ pub fn parse_entities(
           .get(0)
           .unwrap();
 
-        part.get_word_lemma(word).to_lowercase()
+        part
+          .get_word_lemma(word)
+          .to_lowercase()
       }
-      _ => {
-        noun_phrase
-          .iter()
-          .map(|word| {
-            word
-              .get_cleaned_word()
-              .to_lowercase()
-          })
-          .collect::<Vec<String>>()
-          .join("_")
-      }
+      _ => noun_phrase
+        .iter()
+        .map(|word| {
+          part
+            .get_word_lemma(word)
+            .to_lowercase()
+        })
+        .collect::<Vec<String>>()
+        .join("_"),
     };
 
     Ok(entity_key)
-}
+  }
 
   // println!("noun_phrase_arrays: {:?}", noun_phrase_arrays.len());
   // dbg!(&noun_phrase_arrays);
@@ -179,33 +179,31 @@ pub fn parse_entities(
 
     if let Some(first_word) = noun_phrase.first() {
       let mut entity = Entity::new(entity_key, symbol);
-  
+
       let mut noun_mods: Vec<EntityProperties> = vec![];
-  
+
       if let Some(prev_word) = part
         .links
         .get_prev_word(&first_word)
       {
         get_noun_modifiers(&mut noun_mods, vec![&first_word], prev_word, part);
       }
-  
+
       entity
         .properties
         .extend(noun_mods);
-  
+
       let word_positions = noun_phrase
         .iter()
         .map(|word| word.position)
         .collect::<Vec<usize>>();
-  
+
       parse_state.add_symbol(&entity.symbol, word_positions);
-  
+
       output_sentence
         .entities
         .push(entity);
     }
-    
-
   }
 
   Ok(output_sentence)
@@ -230,8 +228,70 @@ pub fn get_noun_modifiers(
     return;
   }
 
+  // checking to see if the word before the current word is "the"
+  if word.has_disjunct(LinkTypes::AL, ConnectorPointing::Left)
+    && word.position
+      == noun
+        .first()
+        .unwrap()
+        .position
+        - 1
+    && word.get_cleaned_word() == "the"
+  {
+    println!("the");
+    if let Some(al_word) = part
+      .links
+      .find_prev_word_with_link(word, LinkTypes::AL, ConnectorPointing::Right)
+    {
+      match al_word
+        .get_cleaned_word()
+        .as_str()
+      {
+        "all" => {
+          println!("all");
+          entity_mods.push(EntityProperties::Quantity {
+            quantity: Quantities::All,
+          });
+        }
+        "both" => {
+          println!("both");
+          entity_mods.push(EntityProperties::Count { count: 2. });
+        }
+        _ => {
+          println!("other");
+        }
+      }
+    }
+  }
+
+  /*
+  LEFT-WALL   hWg+ RW+
+  find.v      Wg- O+
+  all.a       Dm+
+  books.n     Dmc- Op-
+  RIGHT-WALL  RW-
+  */
   if word.has_raw_disjunct("Dm+") {
     //
+  }
+
+  if word.has_raw_disjunct("Dmc+") {
+    match word
+      .get_cleaned_word()
+      .as_str()
+    {
+      "all" => {
+        entity_mods.push(EntityProperties::Quantity {
+          quantity: Quantities::All,
+        });
+      }
+      "both" => {
+        entity_mods.push(EntityProperties::Count { count: 2. });
+      }
+      _ => {
+        println!("!!!")
+      }
+    }
   }
 
   if word.has_raw_disjunct("Dmcn+") {
@@ -247,7 +307,11 @@ pub fn get_noun_modifiers(
   }
 
   // "DTi+" is used to link determiners with nouns
-  if word.has_pos(POS::Adjective) && !word.has_raw_disjunct("DTi+") {
+  if word.has_pos(POS::Adjective)
+    && !word.has_raw_disjunct("DTi+")
+    && !word.has_raw_disjunct("ALx+")
+  /* Already added with "the" check above */
+  {
     let mut amplifiers = vec![];
 
     if let Some(prev_word) = part
