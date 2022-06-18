@@ -1,0 +1,99 @@
+[
+  {
+    "sentence": "Find me all the books",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "book",
+          "symbol": "$3",
+          "properties": [
+            {
+              "quantity": "all"
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "find",
+          "symbol": "$2",
+          "properties": [
+            {
+              "benefactive": "$1"
+            },
+            {
+              "patient": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "Jeff bought ten ice cream cones for John",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "person",
+          "symbol": "$1",
+          "properties": [
+            {
+              "name": "jeff"
+            }
+          ]
+        },
+        {
+          "agent_type": "person",
+          "symbol": "$2",
+          "properties": [
+            {
+              "name": "john"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "ice_cream_cone",
+          "symbol": "$4",
+          "properties": [
+            {
+              "count": 10.0
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "buy",
+          "symbol": "$3",
+          "properties": [
+            {
+              "agent": "$1"
+            },
+            {
+              "patient": "$4"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  }
+]

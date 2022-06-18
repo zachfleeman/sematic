@@ -53,6 +53,7 @@ pub enum Quantities {
   Many,
   Most,
   Multiple,
+  Both,
 }
 
 impl EntityProperties {

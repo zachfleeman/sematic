@@ -10,9 +10,14 @@ use crate::{
   },
 };
 
-use link_parser_rust_bindings::{lp::word::Word as LPWord, pos::POS};
+use link_parser_rust_bindings::{
+  lp::{disjunct::ConnectorPointing, word::Word as LPWord, link_types::LinkTypes},
+  pos::POS,
+};
 
 use super::link_parse::ParseState;
+
+pub static EGO_WORDS: [&str; 3] = ["I", "my", "me"];
 
 pub fn parse_agents(
   sema_sentence: &mut SemaSentence,
@@ -22,19 +27,15 @@ pub fn parse_agents(
 ) -> Result<()> {
   println!("Parse Agents");
   // "I" and "My" detection
+  // Handling of basic people pronouns
   let ego_words = part
     .links
     .words
     .iter()
     .filter(|lp_word| {
-      lp_word
-        .word
-        .to_lowercase()
-        == "i"
-        || lp_word
-          .word
-          .to_lowercase()
-          == "my"
+      let w = lp_word.get_cleaned_word().to_lowercase();
+      let w_ref = w.as_str();
+      EGO_WORDS.contains(&w_ref)
     })
     .collect::<Vec<_>>();
 
@@ -79,7 +80,10 @@ pub fn parse_agents(
     }
 
     if word.word_is_capitalized() {
-      if word.morpho_guessed && HumanNames::contains(&cleaned_word) {
+      if word.morpho_guessed
+        && HumanNames::contains(&cleaned_word)
+        && !word.has_disjunct(LinkTypes::G, ConnectorPointing::Left) // G connects proper nouns words together
+      {
         current_name.push(word.clone());
       }
 
@@ -122,7 +126,9 @@ pub fn parse_agents(
           .collect::<Vec<String>>()
           .join("_");
 
-        vec![PersonProperties::Name { name: combined_name }]
+        vec![PersonProperties::Name {
+          name: combined_name,
+        }]
       }
     };
 

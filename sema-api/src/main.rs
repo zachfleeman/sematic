@@ -27,10 +27,8 @@ use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 use routes::{health, srl, text_to_json};
 // use state::State;
 
-use crate::nlp::human_names::HumanNames;
-use crate::nlp::nlp_rule::NLPRule;
-use crate::wordnet::wordnet_nouns::WordnetNouns;
-use crate::wordnet::wordnet_verbs::WordnetVerbs;
+use crate::nlp::init_nlp_cells;
+use crate::wordnet::init_wordnet_cells;
 use jsonwebtoken::{DecodingKey};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use crate::middleware::auth::validator;
@@ -52,15 +50,8 @@ async fn main() -> std::io::Result<()> {
   };
   let link_parser = Arc::new(Mutex::new(LinkParser::new(link_parser_ops)));
 
-  // Init NLP Rule
-  NLPRule::init();
-
-  // Init Wordnet collections
-  WordnetVerbs::init();
-  WordnetNouns::init();
-
-  // Init Human Names
-  HumanNames::init();
+  init_nlp_cells(&config.data_path);
+  init_wordnet_cells(&config.data_path);
 
   dbg!(&config);
 

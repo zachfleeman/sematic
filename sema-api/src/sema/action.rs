@@ -144,14 +144,14 @@ impl Action {
   }
 }
 
-// pub enum ActionPropertyTypes {
-//   Agent, // Arg0
-//   Patient, // Arg1
-//   Instrument, // Arg2
-//   StartingPoint, // Arg3
-//   EndingPoint, // Arg4
-
-// }
+/*
+ArgO - agent
+Arg1 - patient
+Arg2 - instrument, benefactive, attribute
+Arg3 - starting point, benefactive, attribute
+Arg4 - ending point
+ArgM - modfier
+*/
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -160,7 +160,10 @@ impl Action {
 pub enum ActionProperties {
   Agent { agent: String },
   Patient { patient: String },
+  Instrument { instrument: String },
+  Benefactive { benefactive: String },
   Direction { direction: Directions },
+  Attribute { attribute: String },
   Purpose { purpose: String }, // symbol to an action or event
   Negate { negate: bool },
 }

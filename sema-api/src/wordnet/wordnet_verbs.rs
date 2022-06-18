@@ -5,19 +5,14 @@ use std::io::BufReader;
 
 use once_cell::sync::OnceCell;
 
-use crate::config::CONFIG;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WordnetVerbs {
   words: HashSet<String>,
 }
 
 impl WordnetVerbs {
-  pub fn new() -> Result<Self> {
-    println!("{:?}", std::env::current_dir());
-    
-    let config = CONFIG.get().unwrap();
-    let path = format!("{}/wordnet_verbs.json", config.data_path);
+  pub fn new(data_path: &str) -> Result<Self> {
+    let path = format!("{}/wordnet_verbs.json", data_path);
     let verbs = File::open(&path)?;
     let reader = BufReader::new(verbs);
     let wordnet_verbs = serde_json::from_reader(reader)?;
@@ -25,8 +20,8 @@ impl WordnetVerbs {
     Ok(wordnet_verbs)
   }
 
-  pub fn init() {
-    let wordnet_verbs = WordnetVerbs::new().expect("Unable to create WordnetVerbs instance");
+  pub fn init(data_path: &str) {
+    let wordnet_verbs = WordnetVerbs::new(data_path).expect("Unable to create WordnetVerbs instance");
     WORDNET_VERBS.set(wordnet_verbs).expect("Unable to set WORDNET_VERBS");
   }
 
