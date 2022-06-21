@@ -5,7 +5,7 @@ extern crate serde_json;
 use anyhow::Result;
 use clap::Parser;
 use console::{style, Term};
-use std::{env, fs::File, io::BufReader, panic::{set_hook, catch_unwind}};
+use std::{env, fs::File, io::BufReader, panic};
 
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
@@ -91,11 +91,11 @@ async fn main() -> Result<()> {
     let sema_sentences = process_parts(vec![parts]).await?;
     let sema_sentence = sema_sentences.get(0).unwrap();
 
-    set_hook(Box::new(|_info| {
+    panic::set_hook(Box::new(|_info| {
       // do nothing
     }));
 
-    let result = catch_unwind(|| -> Result<()> {
+    let result = panic::catch_unwind(|| -> Result<()> {
       assert_json_diff::assert_json_eq!(
         &serde_json::to_string(sema_sentence)?,
         &serde_json::to_string(&test.data)?

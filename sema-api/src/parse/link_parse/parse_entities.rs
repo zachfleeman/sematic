@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::collections::HashMap;
 
 use link_parser_rust_bindings::{
   lp::{disjunct::ConnectorPointing, link_types::LinkTypes, word::Word},
@@ -91,9 +92,17 @@ pub fn build_noun_phrases(
         // println!("noun_phrase.push 2");
         noun_phrase.push(word);
         build_noun_phrases(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
+      } else if word.has_disjunct(LinkTypes::AN, ConnectorPointing::Right) {
+        // if word branches aren't in dictionary, might still be a noun phrase.
+        // Look to see if word is a noun with an "AN" disjunct.
+        // "AN" connects noun-modifiers to following nouns: "The TAX PROPOSAL was rejected".
+        // println!("noun_phrase.push 3");
+        noun_phrase.push(word);
+        let empty_hash_map = HashMap::new();
+        build_noun_phrases(words, part, &empty_hash_map, noun_phrase, noun_phrases)?;
       } else {
-        // println!("else 3");
         if noun_phrase.len() > 0 {
+          // println!("else 3");
           noun_phrase.reverse();
           noun_phrases.push(noun_phrase.clone());
           noun_phrase.clear();
@@ -110,6 +119,31 @@ pub fn build_noun_phrases(
   }
 
   Ok(())
+}
+
+pub fn get_entity_key(noun_phrase: &Vec<Word>, part: &SentenceParts) -> Result<String> {
+  let entity_key = match noun_phrase.len() {
+    1 => {
+      let word = noun_phrase
+        .get(0)
+        .unwrap();
+
+      part
+        .get_word_lemma(word)
+        .to_lowercase()
+    }
+    _ => noun_phrase
+      .iter()
+      .map(|word| {
+        part
+          .get_word_lemma(word)
+          .to_lowercase()
+      })
+      .collect::<Vec<String>>()
+      .join("_"),
+  };
+
+  Ok(entity_key)
 }
 
 pub fn parse_entities(
@@ -146,47 +180,64 @@ pub fn parse_entities(
     )?;
   }
 
-  pub fn get_entity_key(noun_phrase: &Vec<Word>, part: &SentenceParts) -> Result<String> {
-    let entity_key = match noun_phrase.len() {
-      1 => {
-        let word = noun_phrase
-          .get(0)
-          .unwrap();
-
-        part
-          .get_word_lemma(word)
-          .to_lowercase()
-      }
-      _ => noun_phrase
-        .iter()
-        .map(|word| {
-          part
-            .get_word_lemma(word)
-            .to_lowercase()
-        })
-        .collect::<Vec<String>>()
-        .join("_"),
-    };
-
-    Ok(entity_key)
-  }
-
   // println!("noun_phrase_arrays: {:?}", noun_phrase_arrays.len());
   // dbg!(&noun_phrase_arrays);
 
   for noun_phrase in noun_phrase_arrays {
     let entity_key = get_entity_key(&noun_phrase, part)?;
+    println!("entity_key: {}", &entity_key);
+
+    let mut noun_mods: Vec<EntityProperties> = vec![];
+
+    // if let Some(last_word) = noun_phrase.last() {
+    //   // see if the last word is plural, and if so, add a "plural" modifier.
+    //   if let Some(plurality) = part.get_word_plurality(&last_word) {
+    //     if plurality == "plural" {
+    //       noun_mods.push(EntityProperties::Quantity {
+    //         quantity: Quantities::Multiple,
+    //       });
+    //     }
+    //   }
+    // }
 
     if let Some(first_word) = noun_phrase.first() {
       let mut entity = Entity::new(entity_key, symbol);
-
-      let mut noun_mods: Vec<EntityProperties> = vec![];
 
       if let Some(prev_word) = part
         .links
         .get_prev_word(&first_word)
       {
         get_noun_modifiers(&mut noun_mods, vec![&first_word], prev_word, part);
+        
+        // if noun is plural and doesn't already have an aplicable modifier (Count, Multiple), add one.
+        if let Some(last_word) = noun_phrase.last() {
+          let has_plural_mod = noun_mods
+            .iter()
+            .any(|prop| match prop {
+              EntityProperties::Modifier {
+                modifier_type: _,
+                modifier: _,
+                amplifiers: _,
+              } => false,
+              EntityProperties::Count { count: _ } => true,
+              EntityProperties::Quantity { quantity: _ } => true,
+              EntityProperties::Occurance { occurs: _ } => false,
+              EntityProperties::Attribute { attribute: _ } => false,
+            });
+  
+          println!("has_plural_mod: {}", has_plural_mod);
+  
+          if !has_plural_mod {
+            // see if the last word is plural, and if so, add a "plural" modifier.
+            if let Some(plurality) = part.get_word_plurality(&last_word) {
+              if plurality == "plural" {
+                noun_mods.push(EntityProperties::Quantity {
+                  quantity: Quantities::Multiple,
+                });
+              }
+            }
+          }
+        }
       }
 
       entity
@@ -264,7 +315,7 @@ pub fn get_noun_modifiers(
     }
   }
 
-  /*
+  /*t
   LEFT-WALL   hWg+ RW+
   find.v      Wg- O+
   all.a       Dm+

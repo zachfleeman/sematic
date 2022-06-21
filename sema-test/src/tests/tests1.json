@@ -95,5 +95,59 @@
       "events": [],
       "queries": []
     }
+  },
+  {
+    "sentence": "Portfolio managers expect interest rates to decline further",
+    "data": {
+      "agents": [],
+      "entities": [
+        {
+          "entity_type": "interest_rate",
+          "symbol": "$3",
+          "properties": [
+            {
+              "quantity": "multiple"
+            }
+          ]
+        },
+        {
+          "entity_type": "portfolio_manager",
+          "symbol": "$4",
+          "properties": [
+            {
+              "quantity": "multiple"
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "expect",
+          "symbol": "$1",
+          "properties": [
+            {
+              "agent": "$4"
+            },
+            {
+              "patient": "$3"
+            }
+          ]
+        },
+        {
+          "action_type": "decline",
+          "symbol": "$2",
+          "properties": [
+            {
+              "agent": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
   }
 ]
