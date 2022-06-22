@@ -53,7 +53,6 @@ pub fn parse_actions(
           action.properties.push(ActionProperties::Negate { negate: true });
         }
       }
-      
     }
 
     parse_state.add_symbol(&action.symbol, vec![v.position]);

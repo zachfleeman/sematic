@@ -232,5 +232,52 @@
       "events": [],
       "queries": []
     }
+  },
+  {
+    "sentence": "Buy a computer for John's birthday",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "person",
+          "symbol": "$1",
+          "properties": [
+            {
+              "name": "john"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "birthday",
+          "symbol": "$3",
+          "properties": []
+        },
+        {
+          "entity_type": "computer",
+          "symbol": "$4",
+          "properties": []
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "buy",
+          "symbol": "$2",
+          "properties": [
+            {
+              "patient": "$4"
+            },
+            {
+              "recipient": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
   }
 ]

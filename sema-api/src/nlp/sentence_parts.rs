@@ -176,11 +176,20 @@ impl SentenceParts {
       return None;
     }
 
+    let word_text = word.get_cleaned_word();
+
     if let Some(token) = self
       .tokens
       .get(word.position - 1)
     {
-      Some(token.clone())
+      if token.word.tags.iter().any(|t| t.lemma.as_ref() == word_text) {
+        return Some(token.clone());
+      } else {
+        if let Some(next_word) = self.links.get_next_word(word) {
+          return self.get_word_token(next_word);
+        } else  { None }
+      }
+      
     } else {
       None
     }

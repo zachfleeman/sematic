@@ -188,10 +188,9 @@ pub fn parse_entities(
     // println!("entity_key: {}", &entity_key);
 
     let mut noun_mods: Vec<EntityProperties> = vec![];
+    let mut entity = Entity::new(entity_key, symbol);
 
     if let Some(first_word) = noun_phrase.first() {
-      let mut entity = Entity::new(entity_key, symbol);
-
       if let Some(prev_word) = part
         .links
         .get_prev_word(&first_word)
