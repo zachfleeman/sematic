@@ -51,7 +51,7 @@ pub fn is_disjunct_multiple(disjunct: &str) -> bool {
   }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum FreeWordOrder {
   Head, // h prescript, 
   Dependent // d prescript

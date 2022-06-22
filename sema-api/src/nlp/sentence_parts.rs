@@ -25,7 +25,9 @@ impl SentenceParts {
   pub fn from_text(original_sentence: &str, repair: bool) -> Result<SentenceParts> {
     let start = Instant::now();
     // let corrected_sentence = NLPRule::correct(original_sentence.clone())?;
-    let clone_original_sentence = original_sentence.clone().to_string();
+    let clone_original_sentence = original_sentence
+      .clone()
+      .to_string();
     println!("original: {}", &clone_original_sentence);
     let corrected_sentence = if repair {
       NLPRule::correct(clone_original_sentence)?
@@ -174,8 +176,20 @@ impl SentenceParts {
       return None;
     }
 
-    if let Some(token) = self.tokens.get(word.position - 1) {
-      Some(token.clone())
+    let word_text = word.get_cleaned_word();
+
+    if let Some(token) = self
+      .tokens
+      .get(word.position - 1)
+    {
+      if token.word.tags.iter().any(|t| t.lemma.as_ref() == word_text) {
+        return Some(token.clone());
+      } else {
+        if let Some(next_word) = self.links.get_next_word(word) {
+          return self.get_word_token(next_word);
+        } else  { None }
+      }
+      
     } else {
       None
     }
@@ -183,9 +197,37 @@ impl SentenceParts {
 
   pub fn get_word_lemma(&self, word: &LPWord) -> String {
     if let Some(token) = self.get_word_token(word) {
-      token.word.tags[0].lemma.clone().as_ref().to_string()
+      token.word.tags[0]
+        .lemma
+        .clone()
+        .as_ref()
+        .to_string()
     } else {
       word.get_cleaned_word()
+    }
+  }
+
+  pub fn get_word_plurality(&self, word: &LPWord) -> Option<String> {
+    if let Some(token) = self.get_word_token(word) {
+      if let Some(chunck_str) = token.chunks.get(0) {
+        let plurality_option = chunck_str
+          .split("-")
+          .last();
+
+        if let Some(plurality) = plurality_option {
+          match plurality {
+            "singular" => Some("singular".to_string()),
+            "plural" => Some("plural".to_string()),
+            _ => None,
+          }
+        } else {
+          None
+        }
+      } else {
+        None
+      }
+    } else {
+      None
     }
   }
 }
