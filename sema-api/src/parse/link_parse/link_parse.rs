@@ -1,6 +1,8 @@
 use anyhow::Result;
 use link_parser_rust_bindings::lp::{
-  disjunct::ConnectorPointing, link_types::LinkTypes, word::Word,
+  disjunct::{ConnectorPointing, FreeWordOrder},
+  link_types::LinkTypes,
+  word::Word,
 };
 use std::collections::HashMap;
 
@@ -11,6 +13,7 @@ use super::{
 
 use crate::{
   nlp::sentence_parts::SentenceParts,
+  // parse,
   sema::{action::ActionProperties, sema_sentence::SemaSentence, symbol::Symbol},
 };
 
@@ -209,13 +212,16 @@ pub fn connect_actions(
 
             if first_o.has_raw_disjunct("Ox-") {
               // first O is a pronoun (me, she, I, it, etc)
-              parse_state.get_symbols_by_position(first_o.position).iter().for_each(|s| {
-                action
-                  .properties
-                  .push(ActionProperties::Benefactive {
-                    benefactive: s.to_owned(),
-                  });
-              });
+              parse_state
+                .get_symbols_by_position(first_o.position)
+                .iter()
+                .for_each(|s| {
+                  action
+                    .properties
+                    .push(ActionProperties::Benefactive {
+                      benefactive: s.to_owned(),
+                    });
+                });
             }
 
             let second_o = part
@@ -230,24 +236,28 @@ pub fn connect_actions(
             // TODO: not sure yet how best to handle single/plural/multiple, but the info is encoded in the links.
             // single
             if second_o.has_raw_disjunct("Os-") {
-              second_o_symbols.iter().for_each(|s| {
-                action
-                  .properties
-                  .push(ActionProperties::Patient {
-                    patient: s.to_owned(),
-                  });
-              });
+              second_o_symbols
+                .iter()
+                .for_each(|s| {
+                  action
+                    .properties
+                    .push(ActionProperties::Patient {
+                      patient: s.to_owned(),
+                    });
+                });
             }
 
             // plural
             if second_o.has_raw_disjunct("Op-") {
-              second_o_symbols.iter().for_each(|s| {
-                action
-                  .properties
-                  .push(ActionProperties::Patient {
-                    patient: s.to_owned(),
-                  });
-              });
+              second_o_symbols
+                .iter()
+                .for_each(|s| {
+                  action
+                    .properties
+                    .push(ActionProperties::Patient {
+                      patient: s.to_owned(),
+                    });
+                });
             }
 
             dbg!(&first_o);
@@ -259,8 +269,95 @@ pub fn connect_actions(
           _ => (),
         }
       }
+
+      // "MV" links can be used to link to receipients of an action.
+      if aw.has_disjunct(LinkTypes::MV, ConnectorPointing::Right) {
+        if let Some(mv_right) = part
+          .links
+          .find_next_word_with_link(&aw, LinkTypes::MV, ConnectorPointing::Left)
+        {
+          if mv_right.has_disjunct(LinkTypes::J, ConnectorPointing::Right) {
+            // get recipient
+            // For now this is considering a J link to be a recipient, but this could be true for a subset of words, e.g. "on", "for", "over".
+            // Also, this might need also refer to a location (e.g. "on the table").
+            if let Some(j_right) = part
+              .links
+              .find_next_word_with_link(&mv_right, LinkTypes::J, ConnectorPointing::Left)
+            {
+              let mut target_symbols = vec![];
+
+              collect_j_target_words(&mut target_symbols, &j_right, &part, parse_state);
+
+              dbg!(&target_symbols);
+
+              for symbol in target_symbols {
+                action
+                  .properties
+                  .push(ActionProperties::Recipient {
+                    recipient: symbol.to_owned(),
+                  });
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   Ok(action_connected_sentence)
+}
+
+// gets all words that are targets of a "J" link
+// e.g. "Mary", "Mary and Steve", "Mary, Steve and John"
+pub fn collect_j_target_words<'a>(
+  target_symbols: &mut Vec<String>,
+  word: &Word,
+  part: &'a SentenceParts,
+  parse_state: &mut ParseState,
+) {
+  for symbol in parse_state.get_symbols_by_position(word.position) {
+    target_symbols.push(symbol.to_owned());
+  }
+
+  // if word_symbols.len() > 0 {
+  //   target_symbols.extend(word_symbols);
+  // }
+  // let word_symbols = parse_state.get_symbols_by_position(word.position);
+
+  // if word_symbols.len() > 0 {
+  //   target_symbols.extend(word_symbols);
+  // }
+
+  if word.has_disjunct_with_prescript(LinkTypes::SJ, ConnectorPointing::Right, FreeWordOrder::Head)
+  {
+    // println!("1");
+    if let Some(next_word) = part
+      .links
+      .find_next_word_with_disjunct(
+        &word,
+        LinkTypes::SJ,
+        ConnectorPointing::Left,
+        FreeWordOrder::Dependent,
+      )
+    {
+      // println!("2");
+      collect_j_target_words(target_symbols, &next_word, part, parse_state);
+    }
+  }
+
+  if word.has_disjunct_with_prescript(LinkTypes::SJ, ConnectorPointing::Left, FreeWordOrder::Head) {
+    // println!("3");
+    if let Some(prev_word) = part
+      .links
+      .find_prev_word_with_disjunct(
+        &word,
+        LinkTypes::SJ,
+        ConnectorPointing::Right,
+        FreeWordOrder::Dependent,
+      )
+    {
+      // println!("4");
+      collect_j_target_words(target_symbols, &prev_word, part, parse_state);
+    }
+  }
 }

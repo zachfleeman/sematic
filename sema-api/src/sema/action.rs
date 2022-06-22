@@ -162,6 +162,7 @@ pub enum ActionProperties {
   Patient { patient: String },
   Instrument { instrument: String },
   Benefactive { benefactive: String },
+  Recipient { recipient: String },
   Direction { direction: Directions },
   Attribute { attribute: String },
   Purpose { purpose: String }, // symbol to an action or event

@@ -88,6 +88,9 @@
             },
             {
               "patient": "$4"
+            },
+            {
+              "recipient": "$2"
             }
           ]
         }
@@ -142,6 +145,86 @@
           "properties": [
             {
               "agent": "$3"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "Jeff bought a new computer for John, Steve and ice cream",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "person",
+          "symbol": "$1",
+          "properties": [
+            {
+              "name": "jeff"
+            }
+          ]
+        },
+        {
+          "agent_type": "person",
+          "symbol": "$2",
+          "properties": [
+            {
+              "name": "john"
+            }
+          ]
+        },
+        {
+          "agent_type": "person",
+          "symbol": "$3",
+          "properties": [
+            {
+              "name": "steve"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "ice_cream",
+          "symbol": "$5",
+          "properties": []
+        },
+        {
+          "entity_type": "computer",
+          "symbol": "$6",
+          "properties": [
+            {
+              "modifier_type": "new",
+              "modifier": null,
+              "amplifiers": []
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "buy",
+          "symbol": "$4",
+          "properties": [
+            {
+              "agent": "$1"
+            },
+            {
+              "patient": "$6"
+            },
+            {
+              "recipient": "$5"
+            },
+            {
+              "recipient": "$3"
+            },
+            {
+              "recipient": "$2"
             }
           ]
         }

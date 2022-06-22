@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{lp::disjunct::Disjunct, pos::POS};
 
-use super::disjunct::ConnectorPointing;
+use super::disjunct::{ConnectorPointing, FreeWordOrder};
 use super::link_types::LinkTypes;
 
 // use nlprule::types::Token;
@@ -75,6 +75,27 @@ impl Word {
       .disjuncts
       .iter()
       .any(|disjunct| disjunct.pointing == conn_pointing && link_type.eq(&disjunct.link_type))
+  }
+
+  pub fn has_disjunct_with_prescript(
+    &self,
+    link_type: LinkTypes,
+    conn_pointing: ConnectorPointing,
+    prescript: FreeWordOrder,
+  ) -> bool {
+    self
+      .disjuncts
+      .iter()
+      .any(|disjunct| {
+        // prescript.eq(prescript)
+        disjunct.pointing == conn_pointing
+          && link_type.eq(&disjunct.link_type)
+          && disjunct
+            .prescript
+            .as_ref()
+            .map(|p| prescript.eq(p))
+            .unwrap_or(false)
+      })
   }
 
   pub fn has_raw_disjunct(&self, raw_disjunct: &str) -> bool {

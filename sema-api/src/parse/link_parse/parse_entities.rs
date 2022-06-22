@@ -185,20 +185,9 @@ pub fn parse_entities(
 
   for noun_phrase in noun_phrase_arrays {
     let entity_key = get_entity_key(&noun_phrase, part)?;
-    println!("entity_key: {}", &entity_key);
+    // println!("entity_key: {}", &entity_key);
 
     let mut noun_mods: Vec<EntityProperties> = vec![];
-
-    // if let Some(last_word) = noun_phrase.last() {
-    //   // see if the last word is plural, and if so, add a "plural" modifier.
-    //   if let Some(plurality) = part.get_word_plurality(&last_word) {
-    //     if plurality == "plural" {
-    //       noun_mods.push(EntityProperties::Quantity {
-    //         quantity: Quantities::Multiple,
-    //       });
-    //     }
-    //   }
-    // }
 
     if let Some(first_word) = noun_phrase.first() {
       let mut entity = Entity::new(entity_key, symbol);
@@ -225,7 +214,7 @@ pub fn parse_entities(
               EntityProperties::Attribute { attribute: _ } => false,
             });
   
-          println!("has_plural_mod: {}", has_plural_mod);
+          // println!("has_plural_mod: {}", has_plural_mod);
   
           if !has_plural_mod {
             // see if the last word is plural, and if so, add a "plural" modifier.
