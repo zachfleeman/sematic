@@ -17,7 +17,7 @@ use link_parser_rust_bindings::{
 
 use super::link_parse::ParseState;
 
-pub static EGO_WORDS: [&str; 3] = ["I", "my", "me"];
+pub static EGO_WORDS: [&str; 3] = ["i", "my", "me"];
 
 pub fn parse_agents(
   sema_sentence: &mut SemaSentence,
@@ -25,7 +25,6 @@ pub fn parse_agents(
   symbol: &mut Symbol,
   parse_state: &mut ParseState,
 ) -> Result<()> {
-  println!("Parse Agents");
   // "I" and "My" detection
   // Handling of basic people pronouns
   let ego_words = part
