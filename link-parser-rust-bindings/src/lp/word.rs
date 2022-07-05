@@ -24,6 +24,7 @@ pub struct Word {
   pub year_date: bool,
   pub day_ordinals: bool,
   pub capitalized: bool,
+  pub all_upper: bool,
 }
 
 impl Word {
@@ -49,6 +50,7 @@ impl Word {
 
     let year_date = word.contains("[!<YEAR-DATE>]");
     let day_ordinals = word.contains("[!<DAY-ORDINALS>]");
+    let all_upper = word.contains("[!<ALL-UPPER>]");
 
     Word {
       position,
@@ -60,6 +62,7 @@ impl Word {
       year_date,
       day_ordinals,
       capitalized,
+      all_upper,
     }
   }
 
@@ -141,5 +144,10 @@ impl Word {
     } else {
       false
     }
+  }
+
+  // kinda temp way to determine if a word is an "I"
+  pub fn word_is_i(&self) -> bool {
+    self.word.to_lowercase() == "i" && self.pos == Some(POS::PluralCountNoun)
   }
 }

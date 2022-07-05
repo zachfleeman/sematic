@@ -44,13 +44,14 @@ pub fn build_noun_phrases(
         POS::Noun | POS::NounUncountable | POS::PluralCountNoun | POS::SingularMassNoun
       ) | word.morpho_guessed)
         && !word.has_raw_disjunct("J+")
+        && !word.word_is_i()
       {
         let lemma = part
           .get_word_lemma(&word)
           .to_lowercase();
         // println!("lemma 1: {:?}, word.position: {:?}", &lemma, word.position);
 
-        if branch.contains_key(&lemma) {
+        if branch.contains_key(&lemma){
           let tree_node = branch
             .get(&lemma)
             .unwrap();
@@ -58,6 +59,12 @@ pub fn build_noun_phrases(
           // println!("noun_phrase.push 1");
           noun_phrase.push(word);
           build_noun_phrases(words, part, &tree_node.branches, noun_phrase, noun_phrases)?;
+        } else if word.all_upper {
+          // got an abbreviation.
+          let empty_hash_map = HashMap::new();
+
+          noun_phrase.push(word);
+          build_noun_phrases(words, part, &empty_hash_map, noun_phrase, noun_phrases)?;
         } else {
           // println!("else 1");
           if noun_phrase.len() > 0 {
@@ -196,7 +203,7 @@ pub fn parse_entities(
         .get_prev_word(&first_word)
       {
         get_noun_modifiers(&mut noun_mods, vec![&first_word], prev_word, part);
-        
+
         // if noun is plural and doesn't already have an aplicable modifier (Count, Multiple), add one.
         if let Some(last_word) = noun_phrase.last() {
           let has_plural_mod = noun_mods
@@ -212,9 +219,9 @@ pub fn parse_entities(
               EntityProperties::Occurance { occurs: _ } => false,
               EntityProperties::Attribute { attribute: _ } => false,
             });
-  
+
           // println!("has_plural_mod: {}", has_plural_mod);
-  
+
           if !has_plural_mod {
             // see if the last word is plural, and if so, add a "plural" modifier.
             if let Some(plurality) = part.get_word_plurality(&last_word) {
