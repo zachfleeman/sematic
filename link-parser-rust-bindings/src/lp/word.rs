@@ -1,4 +1,5 @@
 // use nlprule::types::Sentence;
+use std::ops::Range;
 use serde::{Deserialize, Serialize};
 
 use crate::{lp::disjunct::Disjunct, pos::POS};
@@ -19,6 +20,8 @@ pub struct Word {
   pub word: String,
   pub pos: Option<POS>,
   pub disjuncts: Vec<Disjunct>, // spliting for now, but should be able to do more in the future.
+  pub bytes: Range<u64>,
+  pub chars: Range<u64>,
   pub morpho_guessed: bool,
   pub unknown_word: bool,
   pub year_date: bool,
@@ -32,6 +35,8 @@ impl Word {
     position: usize,
     lp_word: &str,
     disjuncts: Vec<Disjunct>, // tokens: Sentence, // token sentence
+    bytes: Range<u64>,
+    chars: Range<u64>,
   ) -> Self {
     let word = match lp_word {
       "." => ".".to_string(),
@@ -56,6 +61,8 @@ impl Word {
       position,
       word,
       disjuncts,
+      bytes,
+      chars,
       pos,
       morpho_guessed,
       unknown_word,

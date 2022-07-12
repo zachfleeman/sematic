@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::ops::Range;
 
 use super::{
   disjunct::{ConnectorPointing, Disjunct, FreeWordOrder},
@@ -8,7 +9,7 @@ use super::{
 use crate::pos::POS;
 use serde::{Deserialize, Serialize};
 
-pub type WordDisjunctsPair = Vec<(String, Vec<String>)>;
+pub type WordDisjunctsPair = Vec<(String, Vec<String>, Range<u64>, Range<u64>)>;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Sentence {
@@ -21,13 +22,13 @@ impl Sentence {
     let words = word_disjuncts_pairs
       .into_iter()
       .enumerate()
-      .map(|(position, (word, disjuncts_strs))| {
+      .map(|(position, (word, disjuncts_strs, bytes, chars))| {
         let disjuncts = disjuncts_strs
           .into_iter()
           .map(|disjunct| Disjunct::new(&disjunct))
           .collect::<Vec<Disjunct>>();
 
-        Word::new(position, &word, disjuncts)
+        Word::new(position, &word, disjuncts, bytes, chars)
       })
       .collect::<Vec<Word>>();
 

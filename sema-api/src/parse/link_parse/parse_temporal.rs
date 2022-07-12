@@ -3,12 +3,15 @@ use anyhow::Result;
 use link_parser_rust_bindings::lp::word::Word;
 
 use crate::{
-  nlp::sentence_parts::{SentenceParts},
+  nlp::{duck::DuckValues, sentence_parts::SentenceParts},
   parse::numbers::construct_number,
   sema::{
     sema_sentence::SemaSentence,
     symbol::Symbol,
-    temporal::{Absolute, AbsoluteProperties, DaysOfWeek, Relative, RelativeProperties, Temporals},
+    temporal::{
+      Absolute, AbsoluteProperties, DaysOfWeek, Duration, DurationProperties, Relative,
+      RelativeProperties, Temporals,
+    },
   },
 };
 
@@ -212,204 +215,252 @@ pub fn parse_temporal(
   // dbg!(&temporal_ir_state.ir);
   // dbg!(&temporal_ir_state.groups);
 
-  // NOTE: This match statement could use some refacoring
-  for group in temporal_ir_state
-    .groups
+  // time ducks
+  part
+    .duck
+    .parts
     .iter()
-  {
-    match &group[..] {
-      // October
-      [TemporalIR::Day(day, day_word), TemporalIR::Of_, TemporalIR::Month(month, month_word)] => {
+    .filter(|p| p.dim == "time")
+    .for_each(|p| match p.value.clone() {
+      DuckValues::Value { grain: _, value } => {
         let temporal = Temporals::Absolute(Absolute {
           symbol: symbol.next_symbol(),
+          properties: vec![AbsoluteProperties::ISO { iso: value.clone() }],
+        });
+
+        parse_state.add_symbol(&temporal.get_symbol(), part.get_duck_word_positions(p));
+
+        output_sentence
+          .temporal
+          .push(temporal);
+      }
+      DuckValues::Interval { to, from } => {
+        let temporal = Temporals::Duration(Duration {
+          symbol: symbol.next_symbol(),
           properties: vec![
-            AbsoluteProperties::Month { month: *month },
-            AbsoluteProperties::Day { day: *day },
+            DurationProperties::Start {
+              start: from.value.clone(),
+            },
+            DurationProperties::End {
+              end: to.value.clone(),
+            },
           ],
         });
 
-        parse_state.add_symbol(
-          &temporal.get_symbol(),
-          vec![day_word.position, month_word.position],
-        );
+        parse_state.add_symbol(&temporal.get_symbol(), part.get_duck_word_positions(p));
 
         output_sentence
           .temporal
           .push(temporal);
       }
-      // March 2nd 2020
-      [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word), TemporalIR::Year(year, year_word)] =>
-      {
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![
-            AbsoluteProperties::Month { month: *month },
-            AbsoluteProperties::Day { day: *day },
-            AbsoluteProperties::Year { year: year.year },
-          ],
-        });
+    });
 
-        parse_state.add_symbol(
-          &temporal.get_symbol(),
-          vec![month_word.position, day_word.position, year_word.position],
-        );
+  // dbg!(&time_ducks);
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      // December 28th, 2019
-      [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word), TemporalIR::Punctuation, TemporalIR::Year(year, year_word)] =>
-      {
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![
-            AbsoluteProperties::Month { month: *month },
-            AbsoluteProperties::Day { day: *day },
-            AbsoluteProperties::Year { year: year.year },
-          ],
-        });
+  // NOTE: This match statement could use some refacoring
+  // for group in temporal_ir_state
+  //   .groups
+  //   .iter()
+  // {
+  //   match &group[..] {
+  //     // October
+  //     [TemporalIR::Day(day, day_word), TemporalIR::Of_, TemporalIR::Month(month, month_word)] => {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![
+  //           AbsoluteProperties::Month { month: *month },
+  //           AbsoluteProperties::Day { day: *day },
+  //         ],
+  //       });
 
-        parse_state.add_symbol(
-          &temporal.get_symbol(),
-          vec![month_word.position, day_word.position, year_word.position],
-        );
+  //       parse_state.add_symbol(
+  //         &temporal.get_symbol(),
+  //         vec![day_word.position, month_word.position],
+  //       );
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      // next Tuesday
-      [TemporalIR::Next_, TemporalIR::DayOfWeek(day_of_week, dow_word)] => {
-        let dow_symbol = symbol.next_symbol();
-        let next_symbol = symbol.next_symbol();
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     // March 2nd 2020
+  //     [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word), TemporalIR::Year(year, year_word)] =>
+  //     {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![
+  //           AbsoluteProperties::Month { month: *month },
+  //           AbsoluteProperties::Day { day: *day },
+  //           AbsoluteProperties::Year { year: year.year },
+  //         ],
+  //       });
 
-        let dow = Temporals::Absolute(Absolute {
-          symbol: dow_symbol.to_owned(),
-          properties: vec![AbsoluteProperties::DayOfWeek {
-            day_of_week: day_of_week.to_owned(),
-          }],
-        });
+  //       parse_state.add_symbol(
+  //         &temporal.get_symbol(),
+  //         vec![month_word.position, day_word.position, year_word.position],
+  //       );
 
-        parse_state.add_symbol(&dow_symbol, vec![dow_word.position]);
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     // December 28th, 2019
+  //     [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word), TemporalIR::Punctuation, TemporalIR::Year(year, year_word)] =>
+  //     {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![
+  //           AbsoluteProperties::Month { month: *month },
+  //           AbsoluteProperties::Day { day: *day },
+  //           AbsoluteProperties::Year { year: year.year },
+  //         ],
+  //       });
 
-        let rel_next = Temporals::Relative(Relative {
-          symbol: next_symbol.to_owned(),
-          properties: vec![RelativeProperties::Next {
-            next: dow_symbol.clone(),
-          }],
-        });
+  //       parse_state.add_symbol(
+  //         &temporal.get_symbol(),
+  //         vec![month_word.position, day_word.position, year_word.position],
+  //       );
 
-        parse_state.add_symbol(&next_symbol, vec![dow_word.position - 1]);
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     // next Tuesday
+  //     [TemporalIR::Next_, TemporalIR::DayOfWeek(day_of_week, dow_word)] => {
+  //       let dow_symbol = symbol.next_symbol();
+  //       let next_symbol = symbol.next_symbol();
 
-        output_sentence
-          .temporal
-          .push(dow);
+  //       let dow = Temporals::Absolute(Absolute {
+  //         symbol: dow_symbol.to_owned(),
+  //         properties: vec![AbsoluteProperties::DayOfWeek {
+  //           day_of_week: day_of_week.to_owned(),
+  //         }],
+  //       });
 
-        output_sentence
-          .temporal
-          .push(rel_next);
-      }
-      // last Tuesday
-      [TemporalIR::Last_, TemporalIR::DayOfWeek(day_of_week, dow_word)] => {
-        let dow_symbol = symbol.next_symbol();
-        let last_symbol = symbol.next_symbol();
-        let dow = Temporals::Absolute(Absolute {
-          symbol: dow_symbol.to_owned(),
-          properties: vec![AbsoluteProperties::DayOfWeek {
-            day_of_week: day_of_week.to_owned(),
-          }],
-        });
+  //       parse_state.add_symbol(&dow_symbol, vec![dow_word.position]);
 
-        parse_state.add_symbol(&dow_symbol, vec![dow_word.position]);
+  //       let rel_next = Temporals::Relative(Relative {
+  //         symbol: next_symbol.to_owned(),
+  //         properties: vec![RelativeProperties::Next {
+  //           next: dow_symbol.clone(),
+  //         }],
+  //       });
 
-        let rel_last = Temporals::Relative(Relative {
-          symbol: last_symbol.to_owned(),
-          properties: vec![RelativeProperties::Previous {
-            previous: dow_symbol.clone(),
-          }],
-        });
+  //       parse_state.add_symbol(&next_symbol, vec![dow_word.position - 1]);
 
-        parse_state.add_symbol(&last_symbol, vec![dow_word.position - 1]);
+  //       output_sentence
+  //         .temporal
+  //         .push(dow);
 
-        output_sentence
-          .temporal
-          .push(dow);
+  //       output_sentence
+  //         .temporal
+  //         .push(rel_next);
+  //     }
+  //     // last Tuesday
+  //     [TemporalIR::Last_, TemporalIR::DayOfWeek(day_of_week, dow_word)] => {
+  //       let dow_symbol = symbol.next_symbol();
+  //       let last_symbol = symbol.next_symbol();
+  //       let dow = Temporals::Absolute(Absolute {
+  //         symbol: dow_symbol.to_owned(),
+  //         properties: vec![AbsoluteProperties::DayOfWeek {
+  //           day_of_week: day_of_week.to_owned(),
+  //         }],
+  //       });
 
-        output_sentence
-          .temporal
-          .push(rel_last);
-      }
-      [TemporalIR::Month(month, month_word)] => {
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![AbsoluteProperties::Month { month: *month }],
-        });
+  //       parse_state.add_symbol(&dow_symbol, vec![dow_word.position]);
 
-        parse_state.add_symbol(&temporal.get_symbol(), vec![month_word.position]);
+  //       let rel_last = Temporals::Relative(Relative {
+  //         symbol: last_symbol.to_owned(),
+  //         properties: vec![RelativeProperties::Previous {
+  //           previous: dow_symbol.clone(),
+  //         }],
+  //       });
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word)] => {
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![
-            AbsoluteProperties::Month { month: *month },
-            AbsoluteProperties::Day { day: *day },
-          ],
-        });
+  //       parse_state.add_symbol(&last_symbol, vec![dow_word.position - 1]);
 
-        parse_state.add_symbol(
-          &temporal.get_symbol(),
-          vec![month_word.position, day_word.position],
-        );
+  //       output_sentence
+  //         .temporal
+  //         .push(dow);
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      [TemporalIR::Year(year, year_word)] => {
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![AbsoluteProperties::Year { year: year.year }],
-        });
+  //       output_sentence
+  //         .temporal
+  //         .push(rel_last);
+  //     }
+  //     [TemporalIR::Month(month, month_word)] => {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![AbsoluteProperties::Month { month: *month }],
+  //       });
 
-        parse_state.add_symbol(&temporal.get_symbol(), vec![year_word.position]);
+  //       parse_state.add_symbol(&temporal.get_symbol(), vec![month_word.position]);
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      [TemporalIR::Number(num, num_word), TemporalIR::Second_ | TemporalIR::Minute_ | TemporalIR::Hour_ | TemporalIR::Day_ | TemporalIR::Week_ | TemporalIR::Month_ | TemporalIR::Year_] => {
-        let prop = match &group[1] {
-            TemporalIR::Second_ => AbsoluteProperties::Second { second: *num },
-            TemporalIR::Minute_ => AbsoluteProperties::Minute { minute: *num },
-            TemporalIR::Hour_ => AbsoluteProperties::Hour { hour: *num },
-            TemporalIR::Day_ => AbsoluteProperties::Day { day: *num },
-            TemporalIR::Week_ => AbsoluteProperties::Week { week: *num },
-            TemporalIR::Month_ => AbsoluteProperties::Month { month: *num },
-            TemporalIR::Year_ => AbsoluteProperties::Year { year: *num },
-            TemporalIR::Weekend_ => todo!(),
-            TemporalIR::Weekday_ => todo!(),
-            _ => todo!(),
-        };
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     [TemporalIR::Month(month, month_word), TemporalIR::Day(day, day_word)] => {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![
+  //           AbsoluteProperties::Month { month: *month },
+  //           AbsoluteProperties::Day { day: *day },
+  //         ],
+  //       });
 
-        let temporal = Temporals::Absolute(Absolute {
-          symbol: symbol.next_symbol(),
-          properties: vec![prop],
-        });
+  //       parse_state.add_symbol(
+  //         &temporal.get_symbol(),
+  //         vec![month_word.position, day_word.position],
+  //       );
 
-        parse_state.add_symbol(&temporal.get_symbol(), vec![num_word.position]);
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     [TemporalIR::Year(year, year_word)] => {
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![AbsoluteProperties::Year { year: year.year }],
+  //       });
 
-        output_sentence
-          .temporal
-          .push(temporal);
-      }
-      _ => (),
-    };
-  }
+  //       parse_state.add_symbol(&temporal.get_symbol(), vec![year_word.position]);
+
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     [TemporalIR::Number(num, num_word), TemporalIR::Second_
+  //     | TemporalIR::Minute_
+  //     | TemporalIR::Hour_
+  //     | TemporalIR::Day_
+  //     | TemporalIR::Week_
+  //     | TemporalIR::Month_
+  //     | TemporalIR::Year_] => {
+  //       let prop = match &group[1] {
+  //         TemporalIR::Second_ => AbsoluteProperties::Second { second: *num },
+  //         TemporalIR::Minute_ => AbsoluteProperties::Minute { minute: *num },
+  //         TemporalIR::Hour_ => AbsoluteProperties::Hour { hour: *num },
+  //         TemporalIR::Day_ => AbsoluteProperties::Day { day: *num },
+  //         TemporalIR::Week_ => AbsoluteProperties::Week { week: *num },
+  //         TemporalIR::Month_ => AbsoluteProperties::Month { month: *num },
+  //         TemporalIR::Year_ => AbsoluteProperties::Year { year: *num },
+  //         TemporalIR::Weekend_ => todo!(),
+  //         TemporalIR::Weekday_ => todo!(),
+  //         _ => todo!(),
+  //       };
+
+  //       let temporal = Temporals::Absolute(Absolute {
+  //         symbol: symbol.next_symbol(),
+  //         properties: vec![prop],
+  //       });
+
+  //       parse_state.add_symbol(&temporal.get_symbol(), vec![num_word.position]);
+
+  //       output_sentence
+  //         .temporal
+  //         .push(temporal);
+  //     }
+  //     _ => (),
+  //   };
+  // }
 
   Ok(output_sentence)
 }
