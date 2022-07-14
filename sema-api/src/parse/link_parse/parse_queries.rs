@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use link_parser_rust_bindings::lp::word::Word;
+use link_parser_rust_bindings::lp::{word::Word, disjunct::ConnectorPointing, link_types::LinkTypes};
 
 use crate::{
   nlp::{duck::DuckValues, sentence_parts::SentenceParts},
@@ -8,7 +8,7 @@ use crate::{
   sema::{
     sema_sentence::SemaSentence,
     symbol::Symbol,
-    query::{Queries, Query, QueryProperties},
+    query::{Queries, Query, Subject, QueryProperties, SubjectProperties},
   },
 };
 
@@ -28,12 +28,29 @@ pub fn parse_queries(
   dbg!(&is_question);
   
   if is_question {
-    let q = Query {
-      symbol: symbol.next_symbol(),
-      properties: vec![],
-    };
+    let w_disjunct_option = part
+      .links
+      .get_left_wall()
+      .and_then(|lw| lw.get_disjunct(LinkTypes::W, ConnectorPointing::Right));
 
-    output_sentence.queries.push(Queries::Query(q));
+    if let Some(w_disjunct) = w_disjunct_option {
+      if w_disjunct.has_subscript(vec!["s"]) {
+        let s = Subject {
+          symbol: symbol.next_symbol(),
+          properties: vec![],
+        };
+
+        output_sentence.queries.push(Queries::Subject(s));
+      }
+    } else {
+      let q = Query {
+        symbol: symbol.next_symbol(),
+        properties: vec![],
+      };
+  
+      output_sentence.queries.push(Queries::Query(q));
+    }
+
   }
 
   Ok(output_sentence)

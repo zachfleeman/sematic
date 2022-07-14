@@ -153,9 +153,15 @@ impl Sentence {
 
   pub fn is_question(&self) -> bool {
     if let Some(lw) = self.get_left_wall() {
+      // W: http://www.abisource.com/projects/link-grammar/dict/section-W.html
       if let Some (w_disjunct) = lw.get_disjunct(LinkTypes::W, ConnectorPointing::Right) {
         return w_disjunct.has_subscript(vec!["q", "s", "j", "w", "b", "v", "h"]);
       }
+
+      // Q: http://www.abisource.com/projects/link-grammar/dict/section-Q.html
+      // Q disjunct in on the left wall means that the sentence is a yes/no question.
+      // e.g. "Are you going to the store?"
+      return lw.has_disjunct(LinkTypes::Q, ConnectorPointing::Right);
     }
 
     false

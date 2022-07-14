@@ -4,7 +4,7 @@ use crate::{
   nlp::human_names::HumanNames,
   nlp::sentence_parts::SentenceParts,
   sema::{
-    agents::{Agents, Ego, Person, PersonProperties},
+    agents::{Agents, Ego, Subject, Person, PersonProperties},
     sema_sentence::SemaSentence,
     symbol::Symbol,
   },
@@ -18,6 +18,8 @@ use link_parser_rust_bindings::{
 use super::link_parse::ParseState;
 
 pub static EGO_WORDS: [&str; 3] = ["i", "my", "me"];
+
+pub static SUBJECT_QUESTION_WORDS: [&str; 1] = ["who"/* , "what", "which" */];
 
 pub fn parse_agents(
   sema_sentence: &mut SemaSentence,
@@ -49,6 +51,34 @@ pub fn parse_agents(
     parse_state.add_symbol(&ego.symbol, ego_positions);
 
     let agent = Agents::Ego(ego);
+
+    sema_sentence
+      .agents
+      .push(agent);
+  }
+
+  let subject_question_words = part
+    .links
+    .words
+    .iter()
+    .filter(|lp_word| {
+      let w = lp_word.get_cleaned_word().to_lowercase();
+      let w_ref = w.as_str();
+      SUBJECT_QUESTION_WORDS.contains(&w_ref)
+    })
+    .collect::<Vec<_>>();
+
+  if subject_question_words.len() > 0 {
+    let subject_question_positions = subject_question_words
+      .iter()
+      .map(|lp_word| lp_word.position)
+      .collect::<Vec<_>>();
+
+    let subject = Subject::new(symbol);
+
+    parse_state.add_symbol(&subject.symbol, subject_question_positions);
+
+    let agent = Agents::Subject(subject);
 
     sema_sentence
       .agents
