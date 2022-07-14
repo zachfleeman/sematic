@@ -86,6 +86,10 @@ impl Disjunct {
       multiple: is_disjunct_multiple(disjunct),
     }
   }
+
+  pub fn has_subscript(&self, letters: Vec<&str>) -> bool {
+    self.subscripts.iter().any(|subscript| letters.contains(&subscript.letter.to_string().as_str()))
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -64,8 +64,7 @@ impl Sentence {
       .iter()
       .filter(|word| {
         if let Some(pos) = &word.pos {
-          pos == &POS::VerbPastTense
-            || pos == &POS::VerbPastTense2
+          pos == &POS::VerbPastTense || pos == &POS::VerbPastTense2
         } else {
           false
         }
@@ -138,8 +137,28 @@ impl Sentence {
       .find(|w| w.position == position)
   }
 
+  pub fn get_left_wall(&self) -> Option<&Word> {
+    self.get_word_by_position(0)
+  }
+
+  pub fn get_right_wall(&self) -> Option<&Word> {
+    self.get_word_by_position(self.words.len() - 1)
+  }
+
   pub fn is_empty(&self) -> bool {
-    self.words.is_empty()
+    self
+      .words
+      .is_empty()
+  }
+
+  pub fn is_question(&self) -> bool {
+    if let Some(lw) = self.get_left_wall() {
+      if let Some (w_disjunct) = lw.get_disjunct(LinkTypes::W, ConnectorPointing::Right) {
+        return w_disjunct.has_subscript(vec!["q", "s", "j", "w", "b", "v", "h"]);
+      }
+    }
+
+    false
   }
 
   pub fn get_prev_word(&self, word: &Word) -> Option<&Word> {
@@ -148,7 +167,9 @@ impl Sentence {
   }
 
   pub fn get_prev_words(&self, word: &Word) -> Vec<&Word> {
-    self.words[..word.position].iter().collect::<Vec<&Word>>()
+    self.words[..word.position]
+      .iter()
+      .collect::<Vec<&Word>>()
   }
 
   pub fn get_next_word(&self, word: &Word) -> Option<&Word> {
@@ -157,68 +178,106 @@ impl Sentence {
   }
 
   pub fn get_next_words(&self, word: &Word) -> Vec<&Word> {
-    self.words[word.position..].iter().collect::<Vec<&Word>>()
+    self.words[word.position..]
+      .iter()
+      .collect::<Vec<&Word>>()
   }
 
   pub fn get_next_words_skip(&self, word: &Word, skip: usize) -> Vec<&Word> {
     let skip = word.position + skip;
-    self.words[skip..].iter().collect::<Vec<&Word>>()
+    self.words[skip..]
+      .iter()
+      .collect::<Vec<&Word>>()
   }
 
-  pub fn find_prev_word_with_link(&self, word: &Word, link_type: LinkTypes, conn_pointing: ConnectorPointing) -> Option<&Word> {
-    self.words[..word.position].iter().rev().find(|w| w.has_disjunct(link_type, conn_pointing))
+  pub fn find_prev_word_with_link(
+    &self,
+    word: &Word,
+    link_type: LinkTypes,
+    conn_pointing: ConnectorPointing,
+  ) -> Option<&Word> {
+    self.words[..word.position]
+      .iter()
+      .rev()
+      .find(|w| w.has_disjunct(link_type, conn_pointing))
   }
 
-  pub fn find_next_word_with_link(&self, word: &Word, link_type: LinkTypes, conn_pointing: ConnectorPointing) -> Option<&Word> {
-    self.words[word.position..].iter().find(|w| w.has_disjunct(link_type, conn_pointing))
+  pub fn find_next_word_with_link(
+    &self,
+    word: &Word,
+    link_type: LinkTypes,
+    conn_pointing: ConnectorPointing,
+  ) -> Option<&Word> {
+    self.words[word.position..]
+      .iter()
+      .find(|w| w.has_disjunct(link_type, conn_pointing))
   }
 
-  pub fn find_prev_word_with_disjunct(&self, word: &Word, link_type: LinkTypes, conn_pointing: ConnectorPointing, prescript: FreeWordOrder) -> Option<&Word> {
-    self.words[..word.position].iter().rev().find(|w| w.has_disjunct_with_prescript(link_type, conn_pointing, prescript))
+  pub fn find_prev_word_with_disjunct(
+    &self,
+    word: &Word,
+    link_type: LinkTypes,
+    conn_pointing: ConnectorPointing,
+    prescript: FreeWordOrder,
+  ) -> Option<&Word> {
+    self.words[..word.position]
+      .iter()
+      .rev()
+      .find(|w| w.has_disjunct_with_prescript(link_type, conn_pointing, prescript))
   }
 
-  pub fn find_next_word_with_disjunct(&self, word: &Word, link_type: LinkTypes, conn_pointing: ConnectorPointing, prescript: FreeWordOrder) -> Option<&Word> {
-    self.words[word.position..].iter().find(|w| w.has_disjunct_with_prescript(link_type, conn_pointing, prescript))
+  pub fn find_next_word_with_disjunct(
+    &self,
+    word: &Word,
+    link_type: LinkTypes,
+    conn_pointing: ConnectorPointing,
+    prescript: FreeWordOrder,
+  ) -> Option<&Word> {
+    self.words[word.position..]
+      .iter()
+      .find(|w| w.has_disjunct_with_prescript(link_type, conn_pointing, prescript))
   }
 
   pub fn find_prev_word_with_raw_disjunct(&self, word: &Word, disjunct: &str) -> Option<&Word> {
-    self.words[..word.position].iter().rev().find(|w| w.has_raw_disjunct(disjunct))
+    self.words[..word.position]
+      .iter()
+      .rev()
+      .find(|w| w.has_raw_disjunct(disjunct))
   }
 
   pub fn find_next_word_with_raw_disjunct(&self, word: &Word, disjunct: &str) -> Option<&Word> {
-    self.words[word.position..].iter().find(|w| w.has_raw_disjunct(disjunct))
+    self.words[word.position..]
+      .iter()
+      .find(|w| w.has_raw_disjunct(disjunct))
   }
 }
 
-
-pub fn get_a_left_words(
-  word: &Word,
-  words: &Vec<Word>,
-  _disjunct: &Disjunct,
-) -> Result<Vec<Word>> {
+pub fn get_a_left_words(word: &Word, words: &Vec<Word>, _disjunct: &Disjunct) -> Result<Vec<Word>> {
   let mut a_link_words = vec![];
 
-  for word in words[0..word.position].iter().rev() {
+  for word in words[0..word.position]
+    .iter()
+    .rev()
+  {
     if word.has_disjunct(LinkTypes::A, ConnectorPointing::Right) {
       a_link_words.push(word.to_owned());
     }
-  };
+  }
 
   Ok(a_link_words)
 }
 
-pub fn get_s_left_words(
-  word: &Word,
-  words: &Vec<Word>,
-  _disjunct: &Disjunct,
-) -> Result<Vec<Word>> {
+pub fn get_s_left_words(word: &Word, words: &Vec<Word>, _disjunct: &Disjunct) -> Result<Vec<Word>> {
   let mut s_link_words = vec![];
 
-  for word in words[0..word.position].iter().rev() {
+  for word in words[0..word.position]
+    .iter()
+    .rev()
+  {
     if word.has_disjunct(LinkTypes::S, ConnectorPointing::Right) {
       s_link_words.push(word.to_owned());
     }
-  };
+  }
 
   Ok(s_link_words)
 }

@@ -22,6 +22,8 @@ pub struct Word {
   pub disjuncts: Vec<Disjunct>, // spliting for now, but should be able to do more in the future.
   pub bytes: Range<u64>,
   pub chars: Range<u64>,
+  pub is_left_wall: bool,
+  pub is_right_wall: bool,
   pub morpho_guessed: bool,
   pub unknown_word: bool,
   pub year_date: bool,
@@ -49,6 +51,9 @@ impl Word {
 
     let pos = POS::from_lp_word(lp_word);
 
+    let is_left_wall = word == "LEFT-WALL";
+    let is_right_wall = word == "RIGHT-WALL";
+
     let morpho_guessed = word.contains("[!");
     let capitalized = word.contains("[!<CAPITALIZED-WORDS>]");
     let unknown_word = word.contains("[?]");
@@ -63,6 +68,8 @@ impl Word {
       disjuncts,
       bytes,
       chars,
+      is_left_wall,
+      is_right_wall,
       pos,
       morpho_guessed,
       unknown_word,
@@ -85,6 +92,13 @@ impl Word {
       .disjuncts
       .iter()
       .any(|disjunct| disjunct.pointing == conn_pointing && link_type.eq(&disjunct.link_type))
+  }
+
+  pub fn get_disjunct(&self, link_type: LinkTypes, conn_pointing: ConnectorPointing) -> Option<&Disjunct> {
+    self
+      .disjuncts
+      .iter()
+      .find(|disjunct| disjunct.pointing == conn_pointing && link_type.eq(&disjunct.link_type))
   }
 
   pub fn has_disjunct_with_prescript(

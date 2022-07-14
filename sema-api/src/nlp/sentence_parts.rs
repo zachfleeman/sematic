@@ -175,37 +175,14 @@ impl SentenceParts {
       .collect::<Vec<Token>>()
   }
 
-  pub fn get_word_token(&self, word: &LPWord) -> Option<Token> {
+  pub fn get_word_token(&self, word: &LPWord) -> Option<&Token> {
     if word.position == 0 {
       return None;
     }
 
-    let word_text = word.get_cleaned_word();
+    let start = word.chars.start as usize;
 
-    if let Some(token) = self
-      .tokens
-      .get(word.position - 1)
-    {
-      if token
-        .word
-        .tags
-        .iter()
-        .any(|t| t.lemma.as_ref() == word_text)
-      {
-        return Some(token.clone());
-      } else {
-        if let Some(next_word) = self
-          .links
-          .get_next_word(word)
-        {
-          return self.get_word_token(next_word);
-        } else {
-          None
-        }
-      }
-    } else {
-      None
-    }
+    self.tokens.iter().find(|t| t.span.char().contains(&start))
   }
 
   pub fn get_word_lemma(&self, word: &LPWord) -> String {
