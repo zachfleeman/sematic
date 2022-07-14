@@ -8,6 +8,7 @@ extern crate serde_derive;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
+use std::ops::Range;
 
 // use nlprule::{rules_filename, tokenizer_filename, Rules, Tokenizer};
 
@@ -175,12 +176,13 @@ impl LinkParser {
           // .map(LPDisjunct::new)
           .map(|d| d.to_string())
           .collect::<Vec<String>>();
-        // .collect::<Vec<LPDisjunct>>();
 
-        // let lp_word = LPWord::new(&word, disjuncts);
+        let byte_start = linkage_get_word_byte_start(linkage, i);
+        let byte_end = linkage_get_word_byte_end(linkage, i);
+        let char_start = linkage_get_word_char_start(linkage, i);
+        let char_end = linkage_get_word_char_end(linkage, i);
 
-        // lp_sentence.add_word(lp_word);
-        word_disjuncts_pairs.push((word, disjuncts));
+        word_disjuncts_pairs.push((word, disjuncts, byte_start..byte_end, char_start..char_end));
       }
 
       sentence_delete(sent);

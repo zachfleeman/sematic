@@ -3,6 +3,7 @@ pub mod treebank_pos;
 pub mod sentence_parts;
 pub mod chunk;
 pub mod human_names;
+pub mod duck;
 
 use self::nlp_rule::NLPRule;
 use self::human_names::HumanNames;

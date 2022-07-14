@@ -96,6 +96,7 @@ pub enum AbsoluteProperties {
   Minute { minute: f32 },
   Second { second: f32 },
   Epoch { epoch: f32 }, // unix epoch
+  ISO { iso: String }, // ISO 8601
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Display)]
@@ -154,14 +155,14 @@ pub enum GeneralTemporal {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Duration {
   pub symbol: String,
-  pub properties: Vec<DurationTemporal>,
+  pub properties: Vec<DurationProperties>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Display)]
 #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 // #[serde(tag = "temporal_duration_type")]
-pub enum DurationTemporal {
+pub enum DurationProperties {
   Year { year: i32 },
   Month { month: i32 },
   Week { week: i32 },

@@ -4,6 +4,7 @@ pub mod parse_actions;
 pub mod parse_entities;
 pub mod parse_temporal;
 pub mod parse_events;
+pub mod parse_queries;
 
 pub use link_parse::parse_with_links;
 

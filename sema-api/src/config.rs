@@ -15,6 +15,7 @@ pub struct Config {
   pub database_url: String,
   pub jwt_secret: String,
   pub data_path: String,
+  pub duckling_url: String,
 }
 
 fn init() -> Config {

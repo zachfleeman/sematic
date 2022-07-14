@@ -1,5 +1,6 @@
-use super::chunk::Chunk;
+use super::duck::DuckPart;
 use super::nlp_rule::NLPRule;
+use super::{chunk::Chunk, duck::Duck};
 use anyhow::Result;
 use link_parser_rust_bindings::lp::{sentence::Sentence as LPSentence, word::Word as LPWord};
 use nlprule::types::owned::Token;
@@ -19,6 +20,8 @@ pub struct SentenceParts {
   pub links: LPSentence,
 
   pub chunks: Vec<Chunk>,
+
+  pub duck: Duck,
 }
 
 impl SentenceParts {
@@ -154,6 +157,7 @@ impl SentenceParts {
         ..Default::default()
       },
       chunks,
+      duck: Duck::default(),
     })
   }
 
@@ -171,28 +175,14 @@ impl SentenceParts {
       .collect::<Vec<Token>>()
   }
 
-  pub fn get_word_token(&self, word: &LPWord) -> Option<Token> {
+  pub fn get_word_token(&self, word: &LPWord) -> Option<&Token> {
     if word.position == 0 {
       return None;
     }
 
-    let word_text = word.get_cleaned_word();
+    let start = word.chars.start as usize;
 
-    if let Some(token) = self
-      .tokens
-      .get(word.position - 1)
-    {
-      if token.word.tags.iter().any(|t| t.lemma.as_ref() == word_text) {
-        return Some(token.clone());
-      } else {
-        if let Some(next_word) = self.links.get_next_word(word) {
-          return self.get_word_token(next_word);
-        } else  { None }
-      }
-      
-    } else {
-      None
-    }
+    self.tokens.iter().find(|t| t.span.char().contains(&start))
   }
 
   pub fn get_word_lemma(&self, word: &LPWord) -> String {
@@ -229,5 +219,47 @@ impl SentenceParts {
     } else {
       None
     }
+  }
+
+  pub fn get_word_ducklings(&self, word: &LPWord) -> Vec<&DuckPart> {
+    if let Some(token) = self.get_word_token(word) {
+      self
+        .duck
+        .parts
+        .iter()
+        .filter(|p| {
+          p.chars.contains(
+            &token
+              .span
+              .char()
+              .start,
+          )
+        })
+        .collect::<Vec<&DuckPart>>()
+    } else {
+      vec![]
+    }
+  }
+
+  pub fn get_duck_words(&self, duck: &DuckPart) -> Vec<&LPWord> {
+    self
+      .links
+      .words
+      .iter()
+      .filter(|w| {
+        let start = w.chars.start as usize;
+        duck
+          .chars
+          .contains(&start)
+      })
+      .collect::<Vec<&LPWord>>()
+  }
+
+  pub fn get_duck_word_positions(&self, duck: &DuckPart) -> Vec<usize> {
+    self
+      .get_duck_words(duck)
+      .iter()
+      .map(|w| w.position)
+      .collect::<Vec<usize>>()
   }
 }

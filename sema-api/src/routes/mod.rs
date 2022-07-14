@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use crate::process_sentences::process::process_parts;
 use crate::services::allennlp_service::{get_semantic_role_labels, SRLResponse};
+use crate::services::duckling::duckling_parse_sentence;
 
 use actix_web::{get, post, web, Error, HttpResponse, Responder};
 use link_parser_rust_bindings::{LinkParser, LinkParserError};
@@ -91,6 +92,12 @@ async fn text_to_json(
     {
       parts.links = links;
     }
+
+    let duckling_parts = duckling_parse_sentence(sentence).await.map_err(SemaAPiError::from)?;
+
+    dbg!(&duckling_parts);
+
+    parts.duck = duckling_parts.into();
 
     all_parts.push(parts);
   }
