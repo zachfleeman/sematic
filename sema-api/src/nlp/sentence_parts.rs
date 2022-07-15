@@ -180,9 +180,36 @@ impl SentenceParts {
       return None;
     }
 
-    let start = word.chars.start as usize;
+    let start = word
+      .chars
+      .start()
+      .to_owned() as usize;
 
-    self.tokens.iter().find(|t| t.span.char().contains(&start))
+    self
+      .tokens
+      .iter()
+      .find(|t| {
+        t.span
+          .char()
+          .contains(&start)
+      })
+  }
+
+  pub fn get_word_tokens(&self, word: &LPWord) -> Vec<&Token> {
+    self
+      .tokens
+      .iter()
+      .filter(|t| {
+        let start = t.span.char().start as u64;
+        let end = t.span.char().end as u64;
+        word
+          .chars
+          .contains(&start)
+          && word
+            .chars
+            .contains(&end)
+      })
+      .collect::<Vec<&Token>>()
   }
 
   pub fn get_word_lemma(&self, word: &LPWord) -> String {
@@ -247,7 +274,11 @@ impl SentenceParts {
       .words
       .iter()
       .filter(|w| {
-        let start = w.chars.start as usize;
+        // let start = w.chars.start as usize;
+        let start = w
+          .chars
+          .start()
+          .to_owned() as usize;
         duck
           .chars
           .contains(&start)

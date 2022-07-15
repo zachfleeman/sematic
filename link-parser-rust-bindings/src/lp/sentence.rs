@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
 use super::{
   disjunct::{ConnectorPointing, Disjunct, FreeWordOrder},
@@ -9,7 +9,7 @@ use super::{
 use crate::pos::POS;
 use serde::{Deserialize, Serialize};
 
-pub type WordDisjunctsPair = Vec<(String, Vec<String>, Range<u64>, Range<u64>)>;
+pub type WordDisjunctsPair = Vec<(String, Vec<String>, RangeInclusive<u64>, RangeInclusive<u64>)>;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Sentence {
