@@ -79,6 +79,7 @@ pub enum RelativeProperties {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Absolute {
   pub symbol: String,
+  pub text: String,
   pub properties: Vec<AbsoluteProperties>,
 }
 

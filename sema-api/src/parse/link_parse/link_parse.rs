@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use super::{
   parse_actions::parse_actions, parse_agents::parse_agents, parse_entities::parse_entities,
-  parse_events::parse_events, parse_temporal::parse_temporal, parse_queries::parse_queries,
+  parse_events::parse_events, parse_queries::parse_queries, parse_temporal::parse_temporal,
 };
 
 use crate::{
@@ -139,23 +139,52 @@ pub fn connect_actions(
       if aw.has_disjunct(LinkTypes::I, ConnectorPointing::Left) {
         // Left Pointing I means the the verb has an infinitive (will/must/etc) to the left of it.
         // Need to still find the agent in a situation like "I will chase the cat".
-        let possible_i = part
+        part
           .links
-          .words
-          .get(aw.position - 2);
+          .find_prev_word_with_link(&aw, LinkTypes::I, ConnectorPointing::Right)
+          .and_then(|i| {
+            if i.has_disjunct(LinkTypes::S, ConnectorPointing::Left) {
+              part
+                .links
+                .find_prev_word_with_link(&i, LinkTypes::S, ConnectorPointing::Right)
+            } else {
+              None
+            }
+          })
+          .and_then(|s| {
+            parse_state
+              .get_symbols_by_position(s.position)
+              .iter()
+              .for_each(|ss| {
+                action
+                  .properties
+                  .push(ActionProperties::Agent {
+                    agent: ss.to_owned(),
+                  });
+              });
 
-        if let Some(i_word) = possible_i {
-          parse_state
-            .get_symbols_by_position(i_word.position)
-            .iter()
-            .for_each(|s| {
-              action
-                .properties
-                .push(ActionProperties::Agent {
-                  agent: s.to_owned(),
-                });
-            });
-        }
+            Some(())
+          });
+      }
+
+      if aw.has_disjunct(LinkTypes::IV, ConnectorPointing::Right) {
+        part
+          .links
+          .find_next_word_with_link(&aw, LinkTypes::IV, ConnectorPointing::Left)
+          .and_then(|iv| {
+            parse_state
+              .get_symbols_by_position(iv.position)
+              .iter()
+              .for_each(|s| {
+                action
+                  .properties
+                  .push(ActionProperties::Outcome {
+                    outcome: s.to_owned(),
+                  });
+              });
+
+            Some(())
+          });
       }
 
       // "O" connects transitive verbs to their objects, direct or indirect: "She SAW ME", "I GAVE HIM the BOOK".

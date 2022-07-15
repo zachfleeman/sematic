@@ -100,60 +100,6 @@
     }
   },
   {
-    "sentence": "Portfolio managers expect interest rates to decline further",
-    "data": {
-      "agents": [],
-      "entities": [
-        {
-          "entity_type": "interest_rate",
-          "symbol": "$3",
-          "properties": [
-            {
-              "quantity": "multiple"
-            }
-          ]
-        },
-        {
-          "entity_type": "portfolio_manager",
-          "symbol": "$4",
-          "properties": [
-            {
-              "quantity": "multiple"
-            }
-          ]
-        }
-      ],
-      "locations": [],
-      "temporal": [],
-      "relations": [],
-      "actions": [
-        {
-          "action_type": "expect",
-          "symbol": "$1",
-          "properties": [
-            {
-              "agent": "$4"
-            },
-            {
-              "patient": "$3"
-            }
-          ]
-        },
-        {
-          "action_type": "decline",
-          "symbol": "$2",
-          "properties": [
-            {
-              "agent": "$3"
-            }
-          ]
-        }
-      ],
-      "events": [],
-      "queries": []
-    }
-  },
-  {
     "sentence": "Jeff bought a new computer for John, Steve and ice cream",
     "data": {
       "agents": [
@@ -281,7 +227,7 @@
     }
   },
   {
-    "sentence": "I will bake a very delicious yellow cake for Thomas Smith on Dec 28th",
+    "sentence": "I will bake a very delicious yellow cake for Thomas Smith",
     "data": {
       "agents": [
         {
@@ -321,20 +267,7 @@
         }
       ],
       "locations": [],
-      "temporal": [
-        {
-          "temporal_type": "absolute",
-          "symbol": "$5",
-          "properties": [
-            {
-              "month": 11.0
-            },
-            {
-              "day": 27.0
-            }
-          ]
-        }
-      ],
+      "temporal": [],
       "relations": [],
       "actions": [
         {
@@ -346,89 +279,189 @@
             },
             {
               "patient": "$4"
-            }
-          ]
-        }
-      ],
-      "events": [
-        {
-          "event_type": "event",
-          "symbol": "$6",
-          "properties": [
-            {
-              "occurs": "$5"
             },
             {
-              "action": "$3"
+              "recipient": "$2"
             }
           ]
         }
       ],
+      "events": [],
       "queries": []
     }
   },
   {
-    "sentence": "Set up a call with Jesse on Thursday at 2pm",
+    "sentence": "I don't know",
     "data": {
       "agents": [
         {
-          "agent_type": "person",
+          "agent_type": "ego",
           "symbol": "$1",
-          "properties": [
-            {
-              "name": "jesse"
-            }
-          ]
-        }
-      ],
-      "entities": [
-        {
-          "entity_type": "call",
-          "symbol": "$3",
           "properties": []
         }
       ],
+      "entities": [],
       "locations": [],
-      "temporal": [
-        {
-          "temporal_type": "absolute",
-          "symbol": "$4",
-          "properties": [
-            {
-              "iso": "2022-07-14T14:00:00.000-07:00"
-            }
-          ]
-        }
-      ],
+      "temporal": [],
       "relations": [],
       "actions": [
         {
-          "action_type": "Set",
+          "action_type": "know",
           "symbol": "$2",
           "properties": [
             {
-              "patient": "$3"
+              "negate": true
             },
             {
-              "recipient": "$1"
+              "agent": "$1"
             }
           ]
         }
       ],
-      "events": [
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "I do not know",
+    "data": {
+      "agents": [
         {
-          "event_type": "event",
-          "symbol": "$5",
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        }
+      ],
+      "entities": [],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "know",
+          "symbol": "$2",
           "properties": [
             {
-              "occurs": "$4"
+              "negate": true
             },
             {
-              "action": "$2"
+              "agent": "$1"
             }
           ]
         }
       ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "I do know",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        }
+      ],
+      "entities": [],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "know",
+          "symbol": "$2",
+          "properties": [
+            {
+              "agent": "$1"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "I know",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        }
+      ],
+      "entities": [],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "know",
+          "symbol": "$2",
+          "properties": [
+            {
+              "agent": "$1"
+            }
+          ]
+        }
+      ],
+      "events": [],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "Portfolio managers expect interest rates to decline further",
+    "data": {
+      "agents": [],
+      "entities": [
+        {
+          "entity_type": "interest_rate",
+          "symbol": "$3",
+          "properties": [
+            {
+              "quantity": "multiple"
+            }
+          ]
+        },
+        {
+          "entity_type": "portfolio_manager",
+          "symbol": "$4",
+          "properties": [
+            {
+              "quantity": "multiple"
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "expect",
+          "symbol": "$1",
+          "properties": [
+            {
+              "agent": "$4"
+            },
+            {
+              "outcome": "$2"
+            },
+            {
+              "patient": "$3"
+            }
+          ]
+        },
+        {
+          "action_type": "decline",
+          "symbol": "$2",
+          "properties": []
+        }
+      ],
+      "events": [],
       "queries": []
     }
   }

@@ -9,8 +9,7 @@ use crate::{
     sema_sentence::SemaSentence,
     symbol::Symbol,
     temporal::{
-      Absolute, AbsoluteProperties, DaysOfWeek, Duration, DurationProperties, Relative,
-      RelativeProperties, Temporals,
+      Absolute, AbsoluteProperties, DaysOfWeek, Duration, DurationProperties, Temporals,
     },
   },
 };
@@ -210,7 +209,7 @@ pub fn parse_temporal(
 ) -> Result<SemaSentence> {
   let mut output_sentence = sema_sentence.clone();
 
-  let temporal_ir_state = TemporalIRState::new(part)?;
+  // let temporal_ir_state = TemporalIRState::new(part)?;
 
   // dbg!(&temporal_ir_state.ir);
   // dbg!(&temporal_ir_state.groups);
@@ -225,6 +224,7 @@ pub fn parse_temporal(
       DuckValues::Value { grain: _, value } => {
         let temporal = Temporals::Absolute(Absolute {
           symbol: symbol.next_symbol(),
+          text: p.content.clone(),
           properties: vec![AbsoluteProperties::ISO { iso: value.clone() }],
         });
 

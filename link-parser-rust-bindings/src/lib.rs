@@ -8,9 +8,6 @@ extern crate serde_derive;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use thiserror::Error;
-use std::ops::Range;
-
-// use nlprule::{rules_filename, tokenizer_filename, Rules, Tokenizer};
 
 pub mod lp;
 pub mod pos;
@@ -182,7 +179,7 @@ impl LinkParser {
         let char_start = linkage_get_word_char_start(linkage, i);
         let char_end = linkage_get_word_char_end(linkage, i);
 
-        word_disjuncts_pairs.push((word, disjuncts, byte_start..byte_end, char_start..char_end));
+        word_disjuncts_pairs.push((word, disjuncts, byte_start..=byte_end, char_start..=char_end));
       }
 
       sentence_delete(sent);

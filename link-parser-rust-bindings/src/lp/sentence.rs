@@ -1,5 +1,5 @@
 use anyhow::Result;
-use std::ops::Range;
+use std::ops::RangeInclusive;
 
 use super::{
   disjunct::{ConnectorPointing, Disjunct, FreeWordOrder},
@@ -9,7 +9,7 @@ use super::{
 use crate::pos::POS;
 use serde::{Deserialize, Serialize};
 
-pub type WordDisjunctsPair = Vec<(String, Vec<String>, Range<u64>, Range<u64>)>;
+pub type WordDisjunctsPair = Vec<(String, Vec<String>, RangeInclusive<u64>, RangeInclusive<u64>)>;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Sentence {
@@ -153,9 +153,15 @@ impl Sentence {
 
   pub fn is_question(&self) -> bool {
     if let Some(lw) = self.get_left_wall() {
+      // W: http://www.abisource.com/projects/link-grammar/dict/section-W.html
       if let Some (w_disjunct) = lw.get_disjunct(LinkTypes::W, ConnectorPointing::Right) {
         return w_disjunct.has_subscript(vec!["q", "s", "j", "w", "b", "v", "h"]);
       }
+
+      // Q: http://www.abisource.com/projects/link-grammar/dict/section-Q.html
+      // Q disjunct in on the left wall means that the sentence is a yes/no question.
+      // e.g. "Are you going to the store?"
+      return lw.has_disjunct(LinkTypes::Q, ConnectorPointing::Right);
     }
 
     false

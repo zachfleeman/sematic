@@ -1,0 +1,154 @@
+[
+  {
+    "sentence": "I will bake a very delicious yellow cake for Thomas Smith on Dec 28th",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "ego",
+          "symbol": "$1",
+          "properties": []
+        },
+        {
+          "agent_type": "person",
+          "symbol": "$2",
+          "properties": [
+            {
+              "first_name": "thomas"
+            },
+            {
+              "last_name": "smith"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "cake",
+          "symbol": "$4",
+          "properties": [
+            {
+              "modifier_type": "yellow",
+              "modifier": null,
+              "amplifiers": []
+            },
+            {
+              "modifier_type": "delicious",
+              "modifier": null,
+              "amplifiers": ["very"]
+            }
+          ]
+        }
+      ],
+      "locations": [],
+      "temporal": [
+        {
+          "temporal_type": "absolute",
+          "symbol": "$5",
+          "properties": [
+            {
+              "month": 11.0
+            },
+            {
+              "day": 27.0
+            }
+          ]
+        }
+      ],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "bake",
+          "symbol": "$3",
+          "properties": [
+            {
+              "agent": "$1"
+            },
+            {
+              "patient": "$4"
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event_type": "event",
+          "symbol": "$6",
+          "properties": [
+            {
+              "occurs": "$5"
+            },
+            {
+              "action": "$3"
+            }
+          ]
+        }
+      ],
+      "queries": []
+    }
+  },
+  {
+    "sentence": "Set up a call with Jesse on Thursday at 2pm",
+    "data": {
+      "agents": [
+        {
+          "agent_type": "person",
+          "symbol": "$1",
+          "properties": [
+            {
+              "name": "jesse"
+            }
+          ]
+        }
+      ],
+      "entities": [
+        {
+          "entity_type": "call",
+          "symbol": "$3",
+          "properties": []
+        }
+      ],
+      "locations": [],
+      "temporal": [
+        {
+          "temporal_type": "absolute",
+          "symbol": "$4",
+          "properties": [
+            {
+              "iso": "2022-07-14T14:00:00.000-07:00"
+            }
+          ]
+        }
+      ],
+      "relations": [],
+      "actions": [
+        {
+          "action_type": "Set",
+          "symbol": "$2",
+          "properties": [
+            {
+              "patient": "$3"
+            },
+            {
+              "recipient": "$1"
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event_type": "event",
+          "symbol": "$5",
+          "properties": [
+            {
+              "occurs": "$4"
+            },
+            {
+              "action": "$2"
+            }
+          ]
+        }
+      ],
+      "queries": []
+    }
+  }
+]

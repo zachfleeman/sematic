@@ -10,6 +10,7 @@ use super::symbol::Symbol;
 #[serde(tag = "agent_type")]
 pub enum Agents {
   Ego(Ego),
+  Subject(Subject),
   Person(Person),
   Group(Group),
   Company(Company),
@@ -20,6 +21,7 @@ impl Agents {
   pub fn get_symbol(&self) -> String {
     match self {
       Self::Ego(ego) => ego.symbol.to_owned(),
+      Self::Subject(subject) => subject.symbol.to_owned(),
       Self::Person(p) => p.symbol.to_owned(),
       Self::Group(g) => g.symbol.to_owned(),
       Self::Company(c) => c.symbol.to_owned(),
@@ -42,6 +44,21 @@ pub struct Ego {
 }
 
 impl Ego {
+  pub fn new(symbol: &mut Symbol) -> Self {
+    Self {
+      symbol: symbol.next_symbol(),
+      properties: vec![],
+    }
+  }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Subject {
+  pub symbol: String,
+  pub properties: Vec<AgentProperties>,
+}
+
+impl Subject {
   pub fn new(symbol: &mut Symbol) -> Self {
     Self {
       symbol: symbol.next_symbol(),
