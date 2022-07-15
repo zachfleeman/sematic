@@ -2492,6 +2492,7 @@ dependencies = [
  "console",
  "indicatif",
  "link-parser-rust-bindings",
+ "once_cell",
  "sema-api",
  "serde",
  "serde_derive",

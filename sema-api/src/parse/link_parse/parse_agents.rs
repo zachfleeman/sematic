@@ -101,7 +101,6 @@ pub fn parse_agents(
         pos,
         POS::GivenName | POS::GivenNameMasculine | POS::GivenNameFeminine
       ) {
-        println!("Name! {}", word.word);
         current_name.push(word.clone());
 
         continue;
