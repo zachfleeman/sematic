@@ -17,7 +17,7 @@ use crate::services::duckling::duckling_parse_sentence;
 use actix_web::{get, post, web, Error, HttpResponse, Responder};
 use link_parser_rust_bindings::{LinkParser, LinkParserError};
 
-use crate::nlp::sentence_parts::SentenceParts;
+use crate::nlp::sentence_parts::{SentenceEncodings, SentenceParts, SentenceText};
 
 // This custom error is needed to convert between anyhow::Error and actix_web::Error
 #[derive(Debug, Display)]
@@ -64,6 +64,7 @@ pub struct TextToJSONRequestObject {
   pub sentences: Vec<String>,
   pub parts: Option<bool>,
   pub repair: Option<bool>,
+  pub encoding: Option<SentenceEncodings>,
 }
 
 #[post("/text-to-json")]
@@ -71,31 +72,39 @@ async fn text_to_json(
   payload: web::Json<TextToJSONRequestObject>,
   link_parser: web::Data<Arc<Mutex<LinkParser>>>,
 ) -> Result<impl Responder, Error> {
-  println!("REACHING THIS POINT, BROCH");
   let lp = link_parser
     .lock()
     .await;
 
   let mut all_parts = vec![];
 
-  let repair = payload.repair.unwrap_or(false);
+  let repair = payload
+    .repair
+    .unwrap_or(false);
+  let encoding = payload
+    .encoding
+    .clone()
+    .unwrap_or(SentenceEncodings::None);
 
   for sentence in payload
     .sentences
     .iter()
   {
-    let mut parts = SentenceParts::from_text(sentence, repair).map_err(SemaAPiError::from)?;
+    let sentence_text =
+      SentenceText::new(sentence.clone(), encoding.clone(), repair).map_err(SemaAPiError::from)?;
+
+    let mut parts = SentenceParts::from_text(&sentence_text).map_err(SemaAPiError::from)?;
 
     if let Some(links) = lp
-      .parse_sentence(&parts.corrected_sentence)
+      .parse_sentence(&sentence_text.text())
       .map_err(SemaAPiError::from)?
     {
       parts.links = links;
     }
 
-    let duckling_parts = duckling_parse_sentence(sentence).await.map_err(SemaAPiError::from)?;
-
-    dbg!(&duckling_parts);
+    let duckling_parts = duckling_parse_sentence(sentence_text.text())
+      .await
+      .map_err(SemaAPiError::from)?;
 
     parts.duck = duckling_parts.into();
 
@@ -113,12 +122,10 @@ async fn text_to_json(
     json!({
       "sema_sentences": sema_sentences,
       "parts": &all_parts,
-      "version": 0.003,
     })
   } else {
     json!({
       "sema_sentences": sema_sentences,
-      "version": 0.003,
     })
   };
 

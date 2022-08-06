@@ -13,6 +13,7 @@ pub struct Config {
   pub database_connection_pool_size: u32,
   pub database_connection_timeout_sec: u64,
   pub database_url: String,
+  pub use_jwt_auth: bool,
   pub jwt_secret: String,
   pub data_path: String,
   pub duckling_url: String,

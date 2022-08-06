@@ -4,6 +4,7 @@ extern crate derive_more;
 extern crate serde_json;
 
 pub mod config;
+pub mod middleware;
 pub mod nlp;
 pub mod parse;
 pub mod process_sentences;
@@ -12,9 +13,8 @@ pub mod sema;
 pub mod sentence;
 pub mod services;
 pub mod state;
-pub mod wordnet;
 pub mod verify;
-pub mod middleware;
+pub mod wordnet;
 
 use futures::lock::Mutex;
 // use sqlx::postgres::PgPoolOptions;
@@ -27,11 +27,11 @@ use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 use routes::{health, srl, text_to_json};
 // use state::State;
 
+use crate::middleware::auth::validator;
 use crate::nlp::init_nlp_cells;
 use crate::wordnet::init_wordnet_cells;
-use jsonwebtoken::{DecodingKey};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use crate::middleware::auth::validator;
+use jsonwebtoken::DecodingKey;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -68,12 +68,12 @@ async fn main() -> std::io::Result<()> {
     let decoding_key = DecodingKey::from_secret(
       config
         .jwt_secret
-        .as_bytes()
-      );
+        .as_bytes(),
+    );
 
     App::new()
-      .wrap(HttpAuthentication::bearer(validator))
       .wrap(actix_web::middleware::Logger::new("%s for %U %a in %Ts"))
+      .wrap(HttpAuthentication::bearer(validator))
       .app_data(web::Data::new(link_parser.clone()))
       // .app_data(web::Data::new(state.clone()))
       .app_data(decoding_key)

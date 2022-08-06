@@ -1,17 +1,30 @@
 use actix_web::dev::ServiceRequest;
-use actix_web::{Error};
+use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
-use actix_web_httpauth::extractors::{AuthenticationError};
-use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm};
+use actix_web_httpauth::extractors::AuthenticationError;
+use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
+
+use crate::config::server_config;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
   sub: String,
-  exp: usize
+  exp: usize,
 }
 
-pub async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, Error> {
-  let key = req.app_data::<DecodingKey>().unwrap();
+pub async fn validator(
+  req: ServiceRequest,
+  credentials: BearerAuth,
+) -> Result<ServiceRequest, Error> {
+  let app_config = server_config();
+
+  if !app_config.use_jwt_auth {
+    return Ok(req);
+  }
+
+  let key = req
+    .app_data::<DecodingKey>()
+    .unwrap();
 
   let mut validation = Validation::new(Algorithm::HS256);
   validation.leeway = 120;

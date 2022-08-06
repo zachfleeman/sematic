@@ -29,7 +29,7 @@ $ sudo lsof -i tcp:8088
 $ kill -9 <pid>
 ```
 
-### Link grammar pos "subscripts"
+### Link grammar POS "subscripts"
 
 ```
 .a // Adjective

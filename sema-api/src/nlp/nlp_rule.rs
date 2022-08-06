@@ -31,10 +31,10 @@ impl NLPRule {
     NLP_RULE.set(nlp_rule).expect("Unable to set NLPRULE");
   }
 
-  pub fn correct(sentence: String) -> Result<String> {
+  pub fn correct(text: &str) -> Result<String> {
     let nlp_rule = NLP_RULE.get().expect("NLP_RULE is not initialized");
 
-    let corrected = nlp_rule.rules.correct(&sentence, &nlp_rule.tokenizer);
+    let corrected = nlp_rule.rules.correct(text, &nlp_rule.tokenizer);
 
     Ok(corrected)
   }

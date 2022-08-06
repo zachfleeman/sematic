@@ -30,6 +30,7 @@ convert_case = "0.5.0"
 nom = "7.1.1"
 jsonwebtoken = "8.1.0"
 env_logger = "0.9.0"
+urlencoding = "2.1.0"
 
 [build-dependencies]
 built = {version = "0.5.1", features = ["chrono", "git2"]}

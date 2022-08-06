@@ -4,14 +4,59 @@ use super::{chunk::Chunk, duck::Duck};
 use anyhow::Result;
 use link_parser_rust_bindings::lp::{sentence::Sentence as LPSentence, word::Word as LPWord};
 use nlprule::types::owned::Token;
+use urlencoding::decode;
 
-use std::time::Instant;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum SentenceEncodings {
+  #[serde(rename = "none")]
+  None,
+
+  #[serde(rename = "url")]
+  URL,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SentenceText {
+  pub original_text: String,
+
+  pub decoded_text: String,
+
+  pub repaired_text: Option<String>,
+}
+
+impl SentenceText {
+  pub fn new(original_text: String, encoding: SentenceEncodings, repair: bool) -> Result<SentenceText> {
+    let decoded_text = match encoding {
+      SentenceEncodings::None => original_text.clone(),
+      SentenceEncodings::URL => decode(&original_text)?.into_owned(),
+    };
+
+    let repaired_text = if repair {
+      Some(NLPRule::correct(&decoded_text)?)
+    } else {
+      None
+    };
+
+    Ok(SentenceText {
+      original_text,
+      decoded_text,
+      repaired_text,
+    })
+  }
+
+  pub fn text(&self) -> &str {
+    match &self.repaired_text {
+      Some(text) => &text,
+      None => &self.decoded_text,
+    }
+  }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SentenceParts {
   pub original_sentence: String,
 
-  pub corrected_sentence: String, // Not actually correct right now, due to how long it takes to run (~50ms)
+  pub corrected_sentence: String,
 
   pub lemmatized_sentence: String,
 
@@ -25,24 +70,23 @@ pub struct SentenceParts {
 }
 
 impl SentenceParts {
-  pub fn from_text(original_sentence: &str, repair: bool) -> Result<SentenceParts> {
-    let start = Instant::now();
-    // let corrected_sentence = NLPRule::correct(original_sentence.clone())?;
-    let clone_original_sentence = original_sentence
-      .clone()
-      .to_string();
-    println!("original: {}", &clone_original_sentence);
-    let corrected_sentence = if repair {
-      NLPRule::correct(clone_original_sentence)?
-    } else {
-      clone_original_sentence
-    };
+  pub fn from_text(sentence_text: &SentenceText) -> Result<SentenceParts> {
+    // let decoded_og_sentence = match parts_config.encoding {
+    //     SentenceEncodings::None => parts_config.original_sentence.to_string(),
+    //     SentenceEncodings::URL => decode(&parts_config.original_sentence)?.into_owned(),
+    // };
+    
+    // dbg!(&decoded_og_sentence);
+    
+    // let corrected_sentence = if parts_config.repair {
+    //   NLPRule::correct(decoded_og_sentence)?
+    // } else {
+    //   decoded_og_sentence
+    // };
 
-    println!("corrected: {}", corrected_sentence);
+    // dbg!(&corrected_sentence);
 
-    let nlp_sentence = NLPRule::tokenize(&corrected_sentence)?;
-    let duration = start.elapsed();
-    println!("nlp_sentence took: {:?}", duration.as_millis());
+    let nlp_sentence = NLPRule::tokenize(sentence_text.text())?;
 
     let tokens = nlp_sentence
       .tokens()
@@ -60,6 +104,7 @@ impl SentenceParts {
         acc + spacer + a.as_ref()
       });
 
+    println!("a");
     // Chunks!
 
     let mut current_chunk: Option<Chunk> = None;
@@ -148,9 +193,11 @@ impl SentenceParts {
       }
     }
 
+    println!("b");
+
     Ok(SentenceParts {
-      original_sentence: original_sentence.to_string(),
-      corrected_sentence: corrected_sentence.to_string(),
+      original_sentence: sentence_text.decoded_text.clone(),
+      corrected_sentence: sentence_text.text().to_owned(),
       lemmatized_sentence,
       tokens,
       links: LPSentence {

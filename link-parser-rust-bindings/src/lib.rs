@@ -135,14 +135,12 @@ impl LinkParser {
     unsafe {
       let sent = sentence_create(s.as_ptr(), self.dict);
       sentence_split(sent, self.opts);
-      let n = sentence_parse(sent, self.opts);
-
-      println!("{}", n);
+      let _n = sentence_parse(sent, self.opts);
 
       let linkage = linkage_create(0, sent, self.opts);
 
       let num_words = linkage_get_num_words(linkage);
-      println!("num_words: {}", num_words);
+      // println!("num_words: {}", num_words);
 
       if num_words == 0 {
         return Ok(None);
@@ -181,6 +179,8 @@ impl LinkParser {
 
         word_disjuncts_pairs.push((word, disjuncts, byte_start..=byte_end, char_start..=char_end));
       }
+
+      // println!("through");
 
       sentence_delete(sent);
 

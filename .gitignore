@@ -1,3 +1,4 @@
 /target
 config.ron
 .vscode
+.env
