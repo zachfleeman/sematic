@@ -1,5 +1,5 @@
 # Sematic NLU API
-`Sematic NLU` is an [NLU](https://en.wikipedia.org/wiki/Natural-language_understanding) API this is a no-holds-barred attempt to convert plain English into structured data. The project currently uses no ML, instead leveraging linguistic analysis libraries such as [OpenCog's link-grammar](https://github.com/opencog/link-grammar), and [Duckling](https://github.com/facebook/duckling). There is a large focus on not just determining objects, but also defining the connections between them.
+`Sematic NLU` is an [NLU](https://en.wikipedia.org/wiki/Natural-language_understanding) API that is a no-holds-barred attempt to convert plain English into structured data. The project currently uses no ML, instead leveraging linguistic analysis libraries such as [OpenCog's link-grammar](https://github.com/opencog/link-grammar), and [Duckling](https://github.com/facebook/duckling). There is a large focus on not just determining objects, but also defining the connections between them.
 
 ## Status
 
