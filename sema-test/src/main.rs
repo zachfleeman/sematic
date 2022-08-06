@@ -2,18 +2,21 @@
 extern crate serde_derive;
 extern crate serde_json;
 
-use std::{env, fs::File, io::BufReader, panic};
 use anyhow::Result;
 use clap::Parser;
 use console::{style, Term};
+use std::{env, fs::File, io::BufReader, panic};
 
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
 use sema_api::{
-  nlp::{init_nlp_cells, sentence_parts::SentenceParts},
+  nlp::{
+    init_nlp_cells,
+    sentence_parts::{SentenceEncodings, SentenceParts, SentenceText},
+  },
   process_sentences::process::process_parts,
-  wordnet::init_wordnet_cells,
   sema::sema_sentence::SemaSentence,
+  wordnet::init_wordnet_cells,
 };
 
 #[derive(Parser, Debug)]
@@ -74,7 +77,9 @@ async fn main() -> Result<()> {
   term.write_line(&format!("hello {}", style("sema-tests").cyan()))?;
 
   let pwd = env::current_dir().unwrap();
-  let pwd = pwd.to_str().unwrap();
+  let pwd = pwd
+    .to_str()
+    .unwrap();
   println!("pwd: {}", pwd);
   // import test data
   let file = File::open("src/tests/tests_1.json")?;
@@ -85,8 +90,14 @@ async fn main() -> Result<()> {
 
   run_json_test_cases(&link_parser, json_tests_1, &mut results).await?;
 
-  let passes = results.iter().filter(|r| r.status == TestResultStatus::Success).count();
-  let fails = results.iter().filter(|r| r.status == TestResultStatus::Failure).collect::<Vec<_>>();
+  let passes = results
+    .iter()
+    .filter(|r| r.status == TestResultStatus::Success)
+    .count();
+  let fails = results
+    .iter()
+    .filter(|r| r.status == TestResultStatus::Failure)
+    .collect::<Vec<_>>();
   let fails_count = fails.len();
 
   println!("total: {}", results.len());
@@ -110,7 +121,9 @@ async fn main() -> Result<()> {
 // need to figure out how to best handle duckling temporal timestamps in tests.
 async fn _load_temporal_tests() -> Result<Vec<TestCase>> {
   let pwd = env::current_dir().unwrap();
-  let pwd = pwd.to_str().unwrap();
+  let pwd = pwd
+    .to_str()
+    .unwrap();
   println!("pwd: {}", pwd);
   // import test data
   let file = File::open("src/tests/temporal_tests_1.json")?;
@@ -121,25 +134,27 @@ async fn _load_temporal_tests() -> Result<Vec<TestCase>> {
 }
 
 fn create_parts(link_parser: &LinkParser, sentence: &str) -> Result<SentenceParts> {
-  let mut parts = SentenceParts::from_text(sentence, false)?; //.map_err(SemaAPiError::from)?;
+  let sentence_text = SentenceText::new(sentence.to_owned(), SentenceEncodings::None, false)?;
+  let mut parts = SentenceParts::from_text(&sentence_text)?; //.map_err(SemaAPiError::from)?;
   let links = link_parser
     .parse_sentence(&parts.corrected_sentence)?
     .unwrap();
   parts.links = links;
   Ok(parts)
 }
-  
+
 async fn run_json_test_cases(
   link_parser: &LinkParser,
-  test_cases: Vec<TestCase>, 
-  results: &mut Vec<TestResult>
+  test_cases: Vec<TestCase>,
+  results: &mut Vec<TestResult>,
 ) -> Result<()> {
-
   for test in test_cases.into_iter() {
     let parts = create_parts(link_parser, &test.sentence)?;
 
     let sema_sentences = process_parts(vec![parts]).await?;
-    let sema_sentence = sema_sentences.get(0).unwrap();
+    let sema_sentence = sema_sentences
+      .get(0)
+      .unwrap();
 
     panic::set_hook(Box::new(|_info| {
       // do nothing
@@ -170,11 +185,10 @@ async fn run_json_test_cases(
           expected: test.data,
           actual: sema_sentence.clone(),
         }
-      },
+      }
     };
 
     results.push(test_result);
-
   }
 
   Ok(())

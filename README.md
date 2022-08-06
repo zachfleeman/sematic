@@ -150,10 +150,7 @@ Config(
 
 The easiest way to get started is to run the project inside of a docker container. The project includes a `Dockerfile` to get an image created. after you create an image, you will need to pass in either a `CONFIG` or `CONFIG_PATH` environment variable to the container when it is started.
 
-
-```bash
-
-1. You will need to build the link-grammar lib. from the project root, run:
+You will need to build the link-grammar lib. from the project root, run:
 
 ```bash
 $ ./install_link_grammar.sh
