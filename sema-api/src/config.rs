@@ -8,6 +8,7 @@ pub static CONFIG: OnceCell<Config> = OnceCell::new();
 pub struct Config {
   pub logging_directive: String,
   pub tcp_port: u16,
+  pub allowed_origins: Vec<String>,
   pub graceful_shutdown_timeout_sec: u64,
   pub max_payload_size_bytes: usize,
   pub database_connection_pool_size: u32,

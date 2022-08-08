@@ -17,11 +17,13 @@ pub mod verify;
 pub mod wordnet;
 
 use futures::lock::Mutex;
+use sema_api::config::{server_config, Config};
 // use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 // use std::{sync::Arc, time::Duration};
 
 use actix_web::{web, App, HttpServer};
+use actix_cors::Cors;
 use link_parser_rust_bindings::{LinkParser, LinkParserOptions};
 
 use routes::{health, srl, text_to_json};
@@ -33,12 +35,25 @@ use crate::wordnet::init_wordnet_cells;
 use actix_web_httpauth::middleware::HttpAuthentication;
 use jsonwebtoken::DecodingKey;
 
+fn get_cors(config: &Config) -> Cors {
+  let mut cors = Cors::default()
+    .allowed_methods(vec!["GET", "POST", "PATCH", "OPTIONS"])
+    .allow_any_header()
+    .supports_credentials();
+
+  for origin in config.allowed_origins.clone() {
+    cors = cors.allowed_origin(&origin);
+  }
+
+  cors
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
   // openssl_probe::init_ssl_cert_env_vars();
   println!("current dir:{:?}", std::env::current_dir());
   color_backtrace::install();
-  let config = config::server_config();
+  let config = server_config();
 
   let mut log_builder = env_logger::Builder::new();
   log_builder.parse_filters(&config.logging_directive);
@@ -76,6 +91,7 @@ async fn main() -> std::io::Result<()> {
       .wrap(HttpAuthentication::bearer(validator))
       .app_data(web::Data::new(link_parser.clone()))
       // .app_data(web::Data::new(state.clone()))
+      .wrap(get_cors(config))
       .app_data(decoding_key)
       .service(health)
       .service(srl)

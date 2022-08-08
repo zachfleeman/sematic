@@ -15,7 +15,7 @@ pub struct Claims {
 pub async fn validator(
   req: ServiceRequest,
   credentials: BearerAuth,
-) -> Result<ServiceRequest, Error> {
+) -> Result<ServiceRequest, (Error, ServiceRequest)> {
   let app_config = server_config();
 
   if !app_config.use_jwt_auth {
@@ -38,7 +38,7 @@ pub async fn validator(
         .app_data::<Config>()
         .map(|data| data.clone())
         .unwrap_or_else(Default::default);
-      Err(AuthenticationError::from(config).into())
+      Err((AuthenticationError::from(config).into(), req))
     }
   }
 }
